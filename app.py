@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="expanded", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS PREMIUM (MONOCROMÁTICO Y NEÓN MORADO - CERO ROJOS)
+# 2. MOTOR CSS PREMIUM (MONOCROMÁTICO Y NEÓN MORADO)
 # ==========================================
 st.markdown("""
     <style>
@@ -42,11 +42,10 @@ st.markdown("""
         }
         input, select, textarea { color: white !important; outline: none !important; background: transparent !important; }
 
-        /* ASESINATO DE LA LÍNEA ROJA EN LAS PESTAÑAS (TABS) */
-        .stTabs [data-baseweb="tab-highlight"] { background-color: #8B5CF6 !important; }
-        .stTabs [data-baseweb="tab-border"] { background-color: #222222 !important; }
-        .stTabs button[role="tab"] { color: #A1A1AA !important; font-weight: 600 !important; }
-        .stTabs button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; }
+        /* 🔪 ASESINATO DEFINITIVO DE LA LÍNEA ROJA EN LAS PESTAÑAS (TABS) */
+        div[data-testid="stTabs"] button[role="tab"] { color: #A1A1AA !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; }
+        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; border-bottom: 2px solid #8B5CF6 !important; }
+        div[data-baseweb="tab-highlight"] { display: none !important; }
 
         /* Formularios Modernos */
         [data-testid="stForm"] {
@@ -57,7 +56,7 @@ st.markdown("""
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
         }
 
-        /* Botones de Acción */
+        /* Botones de Acción Neón */
         .stButton>button {
             background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important;
             color: #FFFFFF !important;
@@ -75,26 +74,27 @@ st.markdown("""
             background: linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%) !important;
         }
 
-        /* REMOCIÓN DEL PUNTO ROJO DEL MENÚ LATERAL Y REFACTORIZACIÓN VISUAL */
+        /* 🔪 ASESINATO DEL PUNTO ROJO DEL MENÚ LATERAL */
         [data-testid="stSidebar"] {
             background-color: #09090B !important;
             border-right: 1px solid #1F1F22 !important;
         }
-        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label div[data-baseweb="radio"] { display: none !important; }
-        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label > div:first-child { display: none !important; }
-        
-        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
+        .stRadio [role="radiogroup"] label div[data-baseweb="radio"], 
+        .stRadio [role="radiogroup"] label > div:first-child { 
+            display: none !important; 
+        }
+        .stRadio [role="radiogroup"] label {
             background: transparent !important;
             border-radius: 6px !important;
-            padding: 12px 15px !important; margin: 2px 8px !important;
+            padding: 12px 15px !important; margin: 4px 8px !important;
             transition: all 0.2s ease !important; cursor: pointer !important;
         }
-        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p { color: #A1A1AA !important; font-weight: 500 !important; margin: 0 !important; }
-        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label[data-checked="true"] {
+        .stRadio [role="radiogroup"] label p { color: #A1A1AA !important; font-weight: 500 !important; margin: 0 !important; }
+        .stRadio [role="radiogroup"] label[data-checked="true"] {
             background: rgba(139, 92, 246, 0.15) !important;
             border-left: 4px solid #8B5CF6 !important;
         }
-        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
+        .stRadio [role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
 
         /* Tarjetas de Métricas */
         [data-testid="stMetric"] { 
@@ -119,7 +119,7 @@ def render_logo():
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. CONEXIÓN OPTIMIZADA POR POOL CENTRAL
+# 3. BASE DE DATOS (POOLING SEGURO)
 # ==========================================
 @st.cache_resource
 def get_pool():
@@ -140,7 +140,9 @@ def run_query(query, params=None):
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query, params or ())
         return pd.DataFrame(cursor.fetchall())
-    except Exception: return pd.DataFrame()
+    except Exception as e: 
+        st.error(f"Error Lectura: {e}")
+        return pd.DataFrame()
     finally:
         if 'cursor' in locals() and cursor: cursor.close()
         if 'conn' in locals() and conn: conn.close()
@@ -150,45 +152,35 @@ def run_transact(query, params=None):
         conn = pool.get_connection()
         cursor = conn.cursor()
         cursor.execute(query, params or ())
+        conn.commit() # EL BLINDAJE CONTRA PAGOS FANTASMAS
         return True
-    except Exception: return False
+    except Exception as e: 
+        st.error(f"Error Escritura: {e}")
+        return False
     finally:
         if 'cursor' in locals() and cursor: cursor.close()
         if 'conn' in locals() and conn: conn.close()
 
-# --- AUTO HEALING EN MINÚSCULAS STRICT (Previene tablas vacías y error 1054) ---
+# --- AUTO HEALING: TABLAS CON PREFIJO "ap_" PARA AISLAMIENTO TOTAL ---
 @st.cache_resource
 def inicializar_bd():
     tablas = [
-        "CREATE TABLE IF NOT EXISTS usuarios (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, password VARCHAR(255), nombre_completo VARCHAR(150), rol VARCHAR(50) DEFAULT 'Asesor', activo BOOLEAN DEFAULT TRUE)",
-        "CREATE TABLE IF NOT EXISTS propiedades (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(150), direccion VARCHAR(255), activo BOOLEAN DEFAULT TRUE)",
-        "CREATE TABLE IF NOT EXISTS unidades (id INT AUTO_INCREMENT PRIMARY KEY, propiedad_id INT, nombre_unidad VARCHAR(100), canon_base DECIMAL(15,2), estado_vacancia VARCHAR(50) DEFAULT 'Disponible', activo BOOLEAN DEFAULT TRUE)",
-        "CREATE TABLE IF NOT EXISTS inquilinos (id INT AUTO_INCREMENT PRIMARY KEY, documento_identidad VARCHAR(50) UNIQUE, nombre_completo VARCHAR(150), telefono VARCHAR(50))",
-        "CREATE TABLE IF NOT EXISTS contratos (id INT AUTO_INCREMENT PRIMARY KEY, unidad_id INT, inquilino_id INT, canon_pactado DECIMAL(15,2), dia_pago_mensual INT, fecha_inicio DATE, fecha_fin DATE, estado_contrato VARCHAR(50) DEFAULT 'Vigente')",
-        "CREATE TABLE IF NOT EXISTS pagos (id INT AUTO_INCREMENT PRIMARY KEY, contrato_id INT, periodo_pagado VARCHAR(20), monto_pagado DECIMAL(15,2), id_referencia_banco VARCHAR(100), fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP, estado_pago VARCHAR(50) DEFAULT 'Aplicado')"
+        "CREATE TABLE IF NOT EXISTS ap_usuarios (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, password VARCHAR(255), nombre_completo VARCHAR(150), rol VARCHAR(50) DEFAULT 'Asesor', activo BOOLEAN DEFAULT TRUE)",
+        "CREATE TABLE IF NOT EXISTS ap_propiedades (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(150), direccion VARCHAR(255), activo BOOLEAN DEFAULT TRUE)",
+        "CREATE TABLE IF NOT EXISTS ap_unidades (id INT AUTO_INCREMENT PRIMARY KEY, propiedad_id INT, nombre_unidad VARCHAR(100), canon_base DECIMAL(15,2), estado_vacancia VARCHAR(50) DEFAULT 'Disponible', activo BOOLEAN DEFAULT TRUE)",
+        "CREATE TABLE IF NOT EXISTS ap_inquilinos (id INT AUTO_INCREMENT PRIMARY KEY, documento_identidad VARCHAR(50) UNIQUE, nombre_completo VARCHAR(150), telefono VARCHAR(50))",
+        "CREATE TABLE IF NOT EXISTS ap_contratos (id INT AUTO_INCREMENT PRIMARY KEY, unidad_id INT, inquilino_id INT, canon_pactado DECIMAL(15,2), dia_pago_mensual INT, fecha_inicio DATE, fecha_fin DATE, estado_contrato VARCHAR(50) DEFAULT 'Vigente')",
+        "CREATE TABLE IF NOT EXISTS ap_pagos (id INT AUTO_INCREMENT PRIMARY KEY, contrato_id INT, periodo_pagado VARCHAR(20), monto_pagado DECIMAL(15,2), id_referencia_banco VARCHAR(100), fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP, estado_pago VARCHAR(50) DEFAULT 'Aplicado')"
     ]
     for t in tablas: run_transact(t)
     
-    # Inyectar alteración de columnas de seguridad sobre las tablas en minúscula
-    columnas_parche = [
-        ("pagos", "periodo_pagado", "VARCHAR(20)"),
-        ("pagos", "contrato_id", "INT"),
-        ("pagos", "monto_pagado", "DECIMAL(15,2)"),
-        ("pagos", "estado_pago", "VARCHAR(50) DEFAULT 'Aplicado'"),
-        ("propiedades", "activo", "BOOLEAN DEFAULT TRUE"),
-        ("unidades", "activo", "BOOLEAN DEFAULT TRUE")
-    ]
-    for tabla, col, tipo in columnas_parche:
-        try: run_transact(f"ALTER TABLE {tabla} ADD COLUMN {col} {tipo}")
-        except: pass
-
-    if run_query("SELECT id FROM usuarios WHERE username='admin'").empty:
-        run_transact("INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES ('admin', '123', 'Gerencia General', 'Administrador')")
+    if run_query("SELECT id FROM ap_usuarios WHERE username='admin'").empty:
+        run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol) VALUES ('admin', '123', 'Gerencia General', 'Administrador')")
 
 inicializar_bd()
 
 # ==========================================
-# 4. UTILS
+# 4. UTILS FINANCIERAS
 # ==========================================
 def fmt_cop(val):
     try: return f"${int(float(val)):,}".replace(',', '.')
@@ -202,6 +194,12 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
         periodos.append(actual.strftime("%Y-%m"))
         actual += relativedelta(months=1)
     return periodos
+
+def get_color_estado(val):
+    if val in ['Vigente', 'Aplicado', 'Ocupado', 'Activo']: return 'background-color: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold;'
+    if val in ['Cancelado', 'Finalizado', 'Anulado', 'Inactivo']: return 'background-color: rgba(245, 158, 11, 0.15); color: #F87171; font-weight: bold;'
+    if val in ['Disponible']: return 'background-color: rgba(139, 92, 246, 0.2); color: #8B5CF6; font-weight: bold;'
+    return ''
 
 # ==========================================
 # 5. CONTROL DE SESIÓN
@@ -218,8 +216,8 @@ if not st.session_state['logeado']:
             u = st.text_input("👤 Credencial Operativa")
             p = st.text_input("🔒 Hash de Seguridad", type="password")
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.form_submit_button("Ingresar"):
-                df_u = run_query("SELECT nombre_completo, rol FROM usuarios WHERE username=%s AND password=%s AND activo=TRUE", (u, p))
+            if st.form_submit_button("Ingresar al Sistema"):
+                df_u = run_query("SELECT nombre_completo, rol FROM ap_usuarios WHERE username=%s AND password=%s AND activo=TRUE", (u, p))
                 if not df_u.empty:
                     st.session_state.update({'logeado': True, 'nombre_usuario': df_u.iloc[0]['nombre_completo'], 'rol': df_u.iloc[0]['rol']})
                     st.rerun()
@@ -242,31 +240,31 @@ with st.sidebar:
         st.session_state['logeado'] = False; st.rerun()
 
 # ----------------------------------------
-# DASHBOARD (LEER HISTORIAL COMPLETO)
+# DASHBOARD
 # ----------------------------------------
 if mod == "dash":
     st.markdown("<h2>Mando Gerencial 📊</h2>", unsafe_allow_html=True)
-    t_con = run_query("SELECT COUNT(*) as t FROM contratos WHERE estado_contrato = 'Vigente'")
-    t_ing = run_query("SELECT SUM(monto_pagado) as t FROM pagos WHERE estado_pago = 'Aplicado'")
+    t_con = run_query("SELECT COUNT(*) as t FROM ap_contratos WHERE estado_contrato = 'Vigente'")
+    t_ing = run_query("SELECT SUM(monto_pagado) as t FROM ap_pagos WHERE estado_pago = 'Aplicado'")
     
     c1, c2, c3 = st.columns(3)
     c1.metric("Contratos Activos", f"{t_con.iloc[0]['t'] if not t_con.empty else 0}")
     c2.metric("Absorción de Caja", fmt_cop(t_ing.iloc[0]['t'] if not t_ing.empty and pd.notna(t_ing.iloc[0]['t']) else 0))
-    c3.metric("Servidor", "Operativo 🟢")
+    c3.metric("Servidor Nube", "Operativo 🟢")
     
     st.divider()
     st.markdown("#### Radar de Transacciones")
     df_p = run_query("""
         SELECT p.fecha_registro as Fecha, IFNULL(u.nombre_unidad, 'Unidad Desconocida') as Origen, 
                p.periodo_pagado as 'Periodo Cubierto', p.monto_pagado as Ingreso, p.estado_pago as Estado 
-        FROM pagos p 
-        LEFT JOIN contratos c ON p.contrato_id = c.id 
-        LEFT JOIN unidades u ON c.unidad_id = u.id 
+        FROM ap_pagos p 
+        LEFT JOIN ap_contratos c ON p.contrato_id = c.id 
+        LEFT JOIN ap_unidades u ON c.unidad_id = u.id 
         ORDER BY p.id DESC LIMIT 15
     """)
     if not df_p.empty:
         df_p['Ingreso'] = df_p['Ingreso'].apply(fmt_cop)
-        st.dataframe(df_p, use_container_width=True, hide_index=True)
+        st.dataframe(df_p.style.map(get_color_estado, subset=['Estado']), use_container_width=True, hide_index=True)
     else: st.info("Registro contable en ceros. No hay ingresos registrados.")
 
 # ----------------------------------------
@@ -283,14 +281,14 @@ elif mod == "activos":
                 nom = st.text_input("Alias del Complejo")
                 dir = st.text_input("Dirección Legal")
                 if st.form_submit_button("Indexar Propiedad") and nom:
-                    if run_transact("INSERT INTO propiedades (nombre, direccion) VALUES (%s, %s)", (nom, dir)):
+                    if run_transact("INSERT INTO ap_propiedades (nombre, direccion) VALUES (%s, %s)", (nom, dir)):
                         st.toast("Propiedad listada."); time.sleep(1); st.rerun()
         with c2:
-            df_p = run_query("SELECT id as ID, nombre as Complejo, direccion as Dirección, IF(activo,'Activo','Inactivo') as Estado FROM propiedades")
-            if not df_p.empty: st.dataframe(df_p, use_container_width=True, hide_index=True)
+            df_p = run_query("SELECT id as ID, nombre as Complejo, direccion as Dirección, IF(activo,'Activo','Inactivo') as Estado FROM ap_propiedades")
+            if not df_p.empty: st.dataframe(df_p.style.map(get_color_estado, subset=['Estado']), use_container_width=True, hide_index=True)
 
     with t2:
-        df_props = run_query("SELECT id, nombre FROM propiedades WHERE activo = TRUE")
+        df_props = run_query("SELECT id, nombre FROM ap_propiedades WHERE activo = TRUE")
         if df_props.empty: st.warning("Requiere matriz estructural activa.")
         else:
             c1, c2 = st.columns([1, 2], gap="large")
@@ -301,36 +299,36 @@ elif mod == "activos":
                     n_uni = st.text_input("Nomenclatura (Ej: Local 1)")
                     can_b = st.number_input("Valor de Salida ($)", step=50000)
                     if st.form_submit_button("Liberar al Mercado") and n_uni:
-                        if run_transact("INSERT INTO unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (opc_p[sel_p], n_uni, int(can_b))):
+                        if run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (opc_p[sel_p], n_uni, float(can_b))):
                             st.toast("Unidad en circulación."); time.sleep(1); st.rerun()
             with c2:
-                df_u = run_query("SELECT p.nombre as Complejo, u.nombre_unidad as Unidad, u.canon_base as 'Tarifa', IF(u.activo,'Activo','Inactivo') as Operatividad, u.estado_vacancia as Vacancia FROM unidades u JOIN propiedades p ON u.propiedad_id = p.id ORDER BY u.id DESC")
+                df_u = run_query("SELECT p.nombre as Complejo, u.nombre_unidad as Unidad, u.canon_base as 'Tarifa', IF(u.activo,'Activo','Inactivo') as Operatividad, u.estado_vacancia as Vacancia FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id ORDER BY u.id DESC")
                 if not df_u.empty:
                     df_u['Tarifa'] = df_u['Tarifa'].apply(fmt_cop)
-                    st.dataframe(df_u, use_container_width=True, hide_index=True)
+                    st.dataframe(df_u.style.map(get_color_estado, subset=['Operatividad', 'Vacancia']), use_container_width=True, hide_index=True)
                     
     with t3:
         st.markdown("#### Desactivar o Activar Entidades")
         colA, colB = st.columns(2)
         with colA:
             with st.form("f_tog_prop"):
-                df_all_p = run_query("SELECT id, nombre, activo FROM propiedades")
+                df_all_p = run_query("SELECT id, nombre, activo FROM ap_propiedades")
                 if not df_all_p.empty:
                     sel_tog_p = st.selectbox("Seleccionar Propiedad", [f"[{'Activo' if r['activo'] else 'Inactivo'}] {r['nombre']}" for _, r in df_all_p.iterrows()])
                     if st.form_submit_button("Alternar Estado"):
                         nom_p = sel_tog_p.split("] ")[1]
                         nuevo_estado = 0 if "Activo" in sel_tog_p else 1
-                        run_transact("UPDATE propiedades SET activo = %s WHERE nombre = %s", (nuevo_estado, nom_p))
+                        run_transact("UPDATE ap_propiedades SET activo = %s WHERE nombre = %s", (nuevo_estado, nom_p))
                         st.rerun()
         with colB:
             with st.form("f_tog_uni"):
-                df_all_u = run_query("SELECT id, nombre_unidad, activo FROM unidades")
+                df_all_u = run_query("SELECT id, nombre_unidad, activo FROM ap_unidades")
                 if not df_all_u.empty:
                     sel_tog_u = st.selectbox("Seleccionar Unidad", [f"[{'Activa' if r['activo'] else 'Inactiva'}] {r['nombre_unidad']}" for _, r in df_all_u.iterrows()])
                     if st.form_submit_button("Alternar Estado "):
                         nom_u = sel_tog_u.split("] ")[1]
                         nuevo_estado = 0 if "Activa" in sel_tog_u else 1
-                        run_transact("UPDATE unidades SET activo = %s WHERE nombre_unidad = %s", (nuevo_estado, nom_u))
+                        run_transact("UPDATE ap_unidades SET activo = %s WHERE nombre_unidad = %s", (nuevo_estado, nom_u))
                         st.rerun()
 
 # ----------------------------------------
@@ -348,15 +346,15 @@ elif mod == "contratos":
                 nom = st.text_input("Razón Social")
                 tel = st.text_input("Enlace Móvil")
                 if st.form_submit_button("Almacenar Nodo") and ced and nom:
-                    if run_transact("INSERT INTO inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (ced, nom, tel)):
+                    if run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (ced, nom, tel)):
                         st.toast("Cliente en red."); time.sleep(1); st.rerun()
         with c2:
-            df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM inquilinos")
+            df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM ap_inquilinos")
             if not df_i.empty: st.dataframe(df_i, use_container_width=True, hide_index=True)
 
     with t2:
-        df_i = run_query("SELECT id, nombre_completo, documento_identidad FROM inquilinos")
-        df_u = run_query("SELECT u.id, u.nombre_unidad, p.nombre FROM unidades u JOIN propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
+        df_i = run_query("SELECT id, nombre_completo, documento_identidad FROM ap_inquilinos")
+        df_u = run_query("SELECT u.id, u.nombre_unidad, p.nombre FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
         
         if df_i.empty or df_u.empty: st.warning("El despliegue requiere clientes y activos activos.")
         else:
@@ -373,13 +371,13 @@ elif mod == "contratos":
                     fi = st.date_input("Fecha Inicio")
                     ff = st.date_input("Fecha Fin Teórica", value=fi + datetime.timedelta(days=365))
                 if st.form_submit_button("Inyectar Contrato") and can > 0:
-                    if run_transact("INSERT INTO contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], int(can), dia, fi, ff)):
-                        run_transact("UPDATE unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (opc_u[sel_u],))
+                    if run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], float(can), dia, fi, ff)):
+                        run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (opc_u[sel_u],))
                         st.toast("Contrato blindado."); time.sleep(1); st.rerun()
                         
     with t3:
         st.markdown("#### Entregar Inmueble y Cerrar Contrato")
-        df_activos = run_query("SELECT c.id, c.unidad_id, u.nombre_unidad, p.nombre as prop, i.nombre_completo FROM contratos c JOIN unidades u ON c.unidad_id=u.id JOIN propiedades p ON u.propiedad_id=p.id JOIN inquilinos i ON c.inquilino_id=i.id WHERE c.estado_contrato = 'Vigente'")
+        df_activos = run_query("SELECT c.id, c.unidad_id, u.nombre_unidad, p.nombre as prop, i.nombre_completo FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id=u.id JOIN ap_propiedades p ON u.propiedad_id=p.id JOIN ap_inquilinos i ON c.inquilino_id=i.id WHERE c.estado_contrato = 'Vigente'")
         if df_activos.empty: st.info("No hay contratos vigentes.")
         else:
             with st.form("f_kill"):
@@ -388,19 +386,19 @@ elif mod == "contratos":
                 fecha_terminacion_real = st.date_input("Fecha real de finalización / entrega:")
                 if st.form_submit_button("🛑 Ejecutar Terminación"):
                     id_con, id_uni = opc_kill[sel_kill]
-                    if run_transact("UPDATE contratos SET estado_contrato = 'Finalizado', fecha_fin = %s WHERE id = %s", (fecha_terminacion_real, id_con)):
-                        run_transact("UPDATE unidades SET estado_vacancia = 'Disponible' WHERE id = %s", (id_uni,))
+                    if run_transact("UPDATE ap_contratos SET estado_contrato = 'Finalizado', fecha_fin = %s WHERE id = %s", (fecha_terminacion_real, id_con)):
+                        run_transact("UPDATE ap_unidades SET estado_vacancia = 'Disponible' WHERE id = %s", (id_uni,))
                         st.toast("Contrato cerrado."); time.sleep(1.5); st.rerun()
 
 # ----------------------------------------
-# TESORERÍA (PAGOS PARCIALES - PREVENCIÓN COBROS DE MÁS)
+# TESORERÍA (CON AUTO-RESTA DE SALDOS)
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería 💰</h2>", unsafe_allow_html=True)
     t1, t2 = st.tabs(["📥 Registrar Ingreso", "🗑️ Revertir Pagos"])
     
     with t1:
-        df_activos = run_query("SELECT c.id, c.fecha_inicio, c.fecha_fin, u.nombre_unidad as uni, p.nombre as prop, i.nombre_completo as inq, c.canon_pactado FROM contratos c JOIN unidades u ON c.unidad_id = u.id JOIN propiedades p ON u.propiedad_id = p.id JOIN inquilinos i ON c.inquilino_id = i.id WHERE c.estado_contrato = 'Vigente'")
+        df_activos = run_query("SELECT c.id, c.fecha_inicio, c.fecha_fin, u.nombre_unidad as uni, p.nombre as prop, i.nombre_completo as inq, c.canon_pactado FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_propiedades p ON u.propiedad_id = p.id JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE c.estado_contrato = 'Vigente'")
         if df_activos.empty: st.info("Sin contratos vigentes que auditar.")
         else:
             c1, c2 = st.columns([1.2, 2], gap="large")
@@ -409,18 +407,18 @@ elif mod == "tesoreria":
             with c1:
                 sel_c = st.selectbox("Seleccionar Obligación Vigente", list(opc_c.keys()))
                 dat_con = opc_c[sel_c]
-                canon_base = int(float(dat_con['canon_pactado']))
+                canon_base = float(dat_con['canon_pactado'])
                 
-                # Algoritmo estricto de control de saldos y ocultamiento de meses completos
-                df_pagos_contrato = run_query("SELECT periodo_pagado, SUM(monto_pagado) as total_pagado FROM pagos WHERE contrato_id = %s GROUP BY periodo_pagado", (int(dat_con['id']),))
-                pagos_map = {row['periodo_pagado']: int(float(row['total_pagado'])) for _, row in df_pagos_contrato.iterrows()} if not df_pagos_contrato.empty else {}
+                # CÁLCULO ESTRICTO DE SALDOS (Borra el mes si ya pagaste completo)
+                df_pagos_contrato = run_query("SELECT periodo_pagado, SUM(monto_pagado) as total_pagado FROM ap_pagos WHERE contrato_id = %s GROUP BY periodo_pagado", (int(dat_con['id']),))
+                pagos_map = {row['periodo_pagado']: float(row['total_pagado']) for _, row in df_pagos_contrato.iterrows()} if not df_pagos_contrato.empty else {}
                 
                 periodos_todos = generar_periodos_contrato(dat_con['fecha_inicio'], dat_con['fecha_fin'])
                 periodos_pendientes = []
                 deuda_por_periodo = {}
                 
                 for p in periodos_todos:
-                    pagado = pagos_map.get(p, 0)
+                    pagado = pagos_map.get(p, 0.0)
                     pendiente = canon_base - pagado
                     if pendiente > 0:
                         periodos_pendientes.append(p)
@@ -429,31 +427,31 @@ elif mod == "tesoreria":
                 if not periodos_pendientes: st.success("Este contrato está completamente al día.")
                 else:
                     with st.form("f_pago", clear_on_submit=True):
-                        per_sel = st.selectbox("Periodo a Pagar (Oculta meses saldados)", periodos_pendientes)
-                        saldo_pendiente = int(deuda_por_periodo.get(per_sel, canon_base))
+                        per_sel = st.selectbox("Periodo a Pagar", periodos_pendientes)
+                        saldo_pendiente = float(deuda_por_periodo.get(per_sel, canon_base))
                         
-                        # Tipos forzados estrictamente a Integer para prevenir la pantalla roja de Streamlit
-                        monto = st.number_input("Capital Recibido ($)", min_value=0, max_value=int(saldo_pendiente), value=int(saldo_pendiente), step=50000)
+                        monto = st.number_input("Capital Recibido ($)", min_value=0.0, max_value=saldo_pendiente, value=saldo_pendiente, step=10000.0)
                         ref = st.text_input("Referencia Bancaria")
                         
                         if st.form_submit_button("Asentar Transacción") and monto > 0:
-                            if run_transact("INSERT INTO pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco) VALUES (%s, %s, %s, %s)", (int(dat_con['id']), str(per_sel), int(monto), str(ref))):
-                                st.toast("Pago registrado."); time.sleep(1); st.rerun()
+                            with st.spinner("Confirmando..."):
+                                if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco) VALUES (%s, %s, %s, %s)", (int(dat_con['id']), str(per_sel), float(monto), str(ref))):
+                                    st.toast("Pago registrado en la nube."); time.sleep(1); st.rerun()
             with c2:
-                df_hist = run_query("SELECT p.fecha_registro as Timestamp, IFNULL(u.nombre_unidad, 'Unidad Borrada') as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM pagos p LEFT JOIN contratos c ON p.contrato_id = c.id LEFT JOIN unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
+                df_hist = run_query("SELECT p.fecha_registro as Timestamp, IFNULL(u.nombre_unidad, 'Unidad Borrada') as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
                 if not df_hist.empty:
                     df_hist['Volumen'] = df_hist['Volumen'].apply(fmt_cop)
                     st.dataframe(df_hist, use_container_width=True, hide_index=True)
 
     with t2:
         st.markdown("#### Anular Transacción del Sistema")
-        df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Unidad Desconocida') as nombre_unidad, IFNULL(i.nombre_completo, 'Cliente Desconocido') as nombre_completo, p.periodo_pagado FROM pagos p LEFT JOIN contratos c ON p.contrato_id = c.id LEFT JOIN unidades u ON c.unidad_id = u.id LEFT JOIN inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
+        df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
         if not df_pagos_del.empty:
             with st.form("f_del_pago"):
                 opc_p = {f"[{str(r['fecha_registro'])[:10]}] {r['nombre_unidad']} - {r['nombre_completo']} | Periodo: {r['periodo_pagado']} | Monto: {fmt_cop(r['monto_pagado'])}": r['id'] for _, r in df_pagos_del.iterrows()}
                 sel_p = st.selectbox("Seleccionar Pago a Revertir", list(opc_p.keys()))
                 if st.form_submit_button("🗑️ Eliminar Pago"):
-                    if run_transact("DELETE FROM pagos WHERE id = %s", (opc_p[sel_p],)):
+                    if run_transact("DELETE FROM ap_pagos WHERE id = %s", (opc_p[sel_p],)):
                         st.toast("Pago eliminado."); time.sleep(1); st.rerun()
 
 # ----------------------------------------
@@ -461,7 +459,7 @@ elif mod == "tesoreria":
 # ----------------------------------------
 elif mod == "vacancia":
     st.markdown("<h2>Disponibilidad 🔑</h2>", unsafe_allow_html=True)
-    df_l = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad, u.canon_base as 'Canon Base' FROM unidades u JOIN propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
+    df_l = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad, u.canon_base as 'Canon Base' FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
     if not df_l.empty:
         df_l['Canon Base'] = df_l['Canon Base'].apply(fmt_cop)
         st.dataframe(df_l, use_container_width=True, hide_index=True)
@@ -480,8 +478,8 @@ elif mod == "seguridad":
             nn = st.text_input("Nombre Real")
             nr = st.selectbox("Jerarquía", ["Administrador", "Asesor Comercial"])
             if st.form_submit_button("Crear Perfil") and nu and np:
-                if run_transact("INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES (%s, %s, %s, %s)", (nu, np, nn, nr)):
+                if run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol) VALUES (%s, %s, %s, %s)", (nu, np, nn, nr)):
                     st.toast("Usuario guardado."); time.sleep(1); st.rerun()
     with c2:
-        df_u = run_query("SELECT username as Alias, nombre_completo as Nombre, rol as Privilegios, IF(activo, 'Activo', 'Inactivo') as Estado FROM usuarios")
-        if not df_u.empty: st.dataframe(df_u, use_container_width=True, hide_index=True)
+        df_u = run_query("SELECT username as Alias, nombre_completo as Nombre, rol as Privilegios, IF(activo, 'Activo', 'Inactivo') as Estado FROM ap_usuarios")
+        if not df_u.empty: st.dataframe(df_u.style.map(get_color_estado, subset=['Estado']), use_container_width=True, hide_index=True)
