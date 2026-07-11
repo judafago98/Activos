@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="expanded", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS PREMIUM (MORADO NEÓN / ZERO ROJOS)
+# 2. MOTOR CSS: EXTERMINIO DEL ROJO Y NEÓN MORADO
 # ==========================================
 st.markdown("""
     <style>
@@ -21,33 +21,33 @@ st.markdown("""
 
         /* Fondo Dark Premium */
         .stApp { background-color: #050505 !important; color: #FAFAFA !important; }
-        
         #MainMenu, footer, header, [data-testid="stHeader"] {display: none !important;}
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-thumb { background: #333333; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8B5CF6; }
 
-        /* 🛡️ INPUTS: FOCO MORADO NEÓN */
+        /* 🛡️ INPUTS Y SELECTS: FOCUS MORADO NEÓN */
         div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] {
             background-color: #111111 !important;
             border: 1px solid #333333 !important;
             border-radius: 8px !important;
             color: white !important;
-            box-shadow: none !important;
         }
         div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within {
             border-color: #8B5CF6 !important;
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4) !important;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5) !important;
             background-color: #1A1A1A !important;
         }
         input, select, textarea { color: white !important; outline: none !important; background: transparent !important; }
 
-        /* PESTAÑAS (TABS) - MATAR LA LÍNEA ROJA NATÍVA */
-        div[data-baseweb="tab-highlight"] { background-color: #8B5CF6 !important; }
-        div[data-baseweb="tab"] p { color: #A1A1AA !important; font-weight: 600 !important; }
-        div[data-baseweb="tab"][aria-selected="true"] p { color: #FFFFFF !important; }
+        /* 🔪 ASESINATO DE LA LÍNEA ROJA EN LAS PESTAÑAS (TABS) */
+        .stTabs [data-baseweb="tab-highlight"] { background-color: #8B5CF6 !important; }
+        .stTabs [data-baseweb="tab-border"] { background-color: #222222 !important; }
+        .stTabs button[role="tab"] { color: #A1A1AA !important; font-weight: 600 !important; }
+        .stTabs button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; }
 
-        /* Formularios */
+        /* Formularios Glassmorphism B&W */
         [data-testid="stForm"] {
             background: #0A0A0A !important;
             border: 1px solid #222222 !important;
@@ -56,7 +56,7 @@ st.markdown("""
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
         }
 
-        /* Botones Morado/Cian */
+        /* Botones Morado Neón */
         .stButton>button {
             background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important;
             color: #FFFFFF !important;
@@ -67,38 +67,33 @@ st.markdown("""
             letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important;
             transition: all 0.2s ease !important;
-            width: 100% !important;
         }
         .stButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.5) !important;
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.6) !important;
             background: linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%) !important;
         }
 
-        /* 🛡️ SIDEBAR: MATAR EL PUNTO ROJO DEL RADIO BUTTON */
+        /* 🔪 ASESINATO DE LOS PUNTOS ROJOS DEL MENÚ LATERAL */
         [data-testid="stSidebar"] {
             background-color: #09090B !important;
             border-right: 1px solid #1F1F22 !important;
         }
-        [data-testid="stSidebar"] [role="radiogroup"] label {
+        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label div[data-baseweb="radio"] { display: none !important; }
+        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label > div:first-child { display: none !important; }
+        
+        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
             background: transparent !important;
             border-radius: 6px !important;
             padding: 12px 15px !important; margin: 2px 8px !important;
             transition: all 0.2s ease !important; cursor: pointer !important;
         }
-        /* Asesinato del punto nativo */
-        [data-testid="stSidebar"] [role="radiogroup"] label div[data-baseweb="radio"],
-        [data-testid="stSidebar"] [role="radiogroup"] label > div:first-child { 
-            display: none !important; 
-        }
-        [data-testid="stSidebar"] [role="radiogroup"] label p { color: #A1A1AA !important; font-weight: 500 !important; margin: 0 !important; }
-        
-        /* Estado Activo del Menú */
-        [data-testid="stSidebar"] [role="radiogroup"] label[data-checked="true"] {
+        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p { color: #A1A1AA !important; font-weight: 500 !important; margin: 0 !important; }
+        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label[data-checked="true"] {
             background: rgba(139, 92, 246, 0.15) !important;
             border-left: 4px solid #8B5CF6 !important;
         }
-        [data-testid="stSidebar"] [role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
+        [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
 
         /* Tarjetas (Metrics) */
         [data-testid="stMetric"] { 
@@ -106,11 +101,11 @@ st.markdown("""
             border-radius: 12px; padding: 20px; border-top: 2px solid #8B5CF6; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s ease;
         }
-        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 2px solid #00E5FF; }
+        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 2px solid #10B981; }
         
         [data-testid="stDataFrame"] { background-color: #0A0A0A; border-radius: 8px; padding: 10px; border: 1px solid #222222; }
         
-        /* Matar alertas rojas */
+        /* Matar alertas rojas de Streamlit */
         [data-testid="stAlert"] { background-color: #111111 !important; border: 1px solid #333333 !important; color: #FFFFFF !important; }
         
         h1, h2, h3, h4 { color: #FFFFFF !important; font-weight: 700 !important; }
@@ -157,7 +152,9 @@ def run_transact(query, params=None):
         cursor = conn.cursor()
         cursor.execute(query, params or ())
         return True
-    except Exception: return False
+    except Exception as e: 
+        st.error(f"Error DB: {e}")
+        return False
     finally:
         if 'cursor' in locals() and cursor: cursor.close()
         if 'conn' in locals() and conn: conn.close()
@@ -251,20 +248,20 @@ if mod == "dash":
     
     st.divider()
     st.markdown("#### Radar de Transacciones")
-    # LEFT JOIN protege contra pagos huérfanos (si borraste el contrato o inmueble en pruebas, igual ves la plata)
+    # LEFT JOIN: Muestra el dinero incluso si el contrato fue eliminado
     df_p = run_query("""
-        SELECT p.fecha_registro as Fecha, IFNULL(u.nombre_unidad, 'Desconocido') as Unidad, 
+        SELECT p.fecha_registro as Fecha, IFNULL(u.nombre_unidad, 'Unidad Desconocida') as Origen, 
                p.periodo_pagado as 'Periodo Cubierto', p.monto_pagado as Ingreso, p.estado_pago as Estado 
         FROM Pagos p 
         LEFT JOIN Contratos c ON p.contrato_id = c.id 
         LEFT JOIN Unidades u ON c.unidad_id = u.id 
-        ORDER BY p.id DESC LIMIT 8
+        ORDER BY p.id DESC LIMIT 15
     """)
     if not df_p.empty:
         df_p['Ingreso'] = df_p['Ingreso'].apply(fmt_cop)
         st.dataframe(df_p, use_container_width=True, hide_index=True)
     else:
-        st.info("Registro contable en ceros.")
+        st.info("Registro contable en ceros. No hay ingresos registrados en el Ledger.")
 
 # ----------------------------------------
 # ACTIVOS E INACTIVAR INMUEBLES
@@ -298,9 +295,9 @@ elif mod == "activos":
                 with st.form("f_u"):
                     sel_p = st.selectbox("Nodo Padre:", list(opc_p.keys()))
                     n_uni = st.text_input("Nomenclatura (Ej: Local 1)")
-                    can_b = st.number_input("Valor de Salida ($)", step=50000)
+                    can_b = st.number_input("Valor de Salida ($)", step=50000.0)
                     if st.form_submit_button("Liberar al Mercado") and n_uni:
-                        if run_transact("INSERT INTO Unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (opc_p[sel_p], n_uni, can_b)):
+                        if run_transact("INSERT INTO Unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (opc_p[sel_p], n_uni, float(can_b))):
                             st.toast("Unidad en circulación."); time.sleep(1); st.rerun()
             with c2:
                 df_u = run_query("SELECT p.nombre as Complejo, u.nombre_unidad as Unidad, u.canon_base as 'Tarifa', IF(u.activo,'Activo','Inactivo') as Operatividad, u.estado_vacancia as Vacancia FROM Unidades u JOIN Propiedades p ON u.propiedad_id = p.id ORDER BY u.id DESC")
@@ -311,6 +308,7 @@ elif mod == "activos":
                     
     with t3:
         st.markdown("#### Desactivar o Activar Entidades")
+        st.write("Los inmuebles inactivos desaparecerán de las opciones de renta.")
         colA, colB = st.columns(2)
         with colA:
             with st.form("f_tog_prop"):
@@ -371,11 +369,11 @@ elif mod == "contratos":
                     sel_u = st.selectbox("Activo Objetivo", list(opc_u.keys()))
                     dia = st.number_input("Día de Corte Mensual", value=5, min_value=1, max_value=31)
                 with cb:
-                    can = st.number_input("Carga Monetaria ($)", step=50000)
+                    can = st.number_input("Carga Monetaria ($)", step=50000.0)
                     fi = st.date_input("Fecha Inicio")
                     ff = st.date_input("Fecha Fin Teórica", value=fi + datetime.timedelta(days=365))
                 if st.form_submit_button("Inyectar Contrato") and can > 0:
-                    if run_transact("INSERT INTO Contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], can, dia, fi, ff)):
+                    if run_transact("INSERT INTO Contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], float(can), dia, fi, ff)):
                         run_transact("UPDATE Unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (opc_u[sel_u],))
                         st.toast("Contrato blindado."); time.sleep(1); st.rerun()
                         
@@ -397,7 +395,7 @@ elif mod == "contratos":
                         st.toast("Contrato cerrado."); time.sleep(1.5); st.rerun()
 
 # ----------------------------------------
-# TESORERÍA & ELIMINAR PAGOS
+# TESORERÍA (PAGOS PARCIALES Y ELIMINACIÓN)
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería 💰</h2>", unsafe_allow_html=True)
@@ -409,40 +407,69 @@ elif mod == "tesoreria":
         if df_activos.empty: st.info("Sin contratos vigentes que auditar.")
         else:
             c1, c2 = st.columns([1.2, 2], gap="large")
-            opc_c = {f"{r['prop']} {r['uni']} - {r['inq']} (Debe: {fmt_cop(r['canon_pactado'])})": r for _, r in df_activos.iterrows()}
+            opc_c = {f"{r['prop']} {r['uni']} - {r['inq']} (Canon: {fmt_cop(r['canon_pactado'])})": r for _, r in df_activos.iterrows()}
             
             with c1:
                 sel_c = st.selectbox("Seleccionar Obligación Vigente", list(opc_c.keys()))
                 dat_con = opc_c[sel_c]
-                periodos_validos = generar_periodos_contrato(dat_con['fecha_inicio'], dat_con['fecha_fin'])
+                canon_base = float(dat_con['canon_pactado'])
                 
-                with st.form("f_pago", clear_on_submit=True):
-                    per_sel = st.selectbox("Periodo a Pagar (Año-Mes)", periodos_validos)
-                    canon_base_int = int(float(dat_con['canon_pactado']))
-                    monto = st.number_input("Capital Recibido ($)", step=50000, value=canon_base_int)
-                    ref = st.text_input("Referencia Bancaria")
-                    
-                    if st.form_submit_button("Asentar Transacción") and monto > 0:
-                        if run_transact("INSERT INTO Pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco) VALUES (%s, %s, %s, %s)", (dat_con['id'], per_sel, monto, ref)):
-                            st.toast("Pago registrado."); time.sleep(1); st.rerun()
+                # ALGORITMO DE DEUDA PARCIAL Y ELIMINACIÓN DE PERIODOS PAGOS
+                df_pagos_contrato = run_query("SELECT periodo_pagado, SUM(monto_pagado) as total_pagado FROM Pagos WHERE contrato_id = %s GROUP BY periodo_pagado", (dat_con['id'],))
+                pagos_map = {row['periodo_pagado']: float(row['total_pagado']) for _, row in df_pagos_contrato.iterrows()} if not df_pagos_contrato.empty else {}
+                
+                periodos_todos = generar_periodos_contrato(dat_con['fecha_inicio'], dat_con['fecha_fin'])
+                periodos_pendientes = []
+                deuda_por_periodo = {}
+                
+                for p in periodos_todos:
+                    pagado = pagos_map.get(p, 0.0)
+                    pendiente = canon_base - pagado
+                    if pendiente > 0:
+                        periodos_pendientes.append(p)
+                        deuda_por_periodo[p] = pendiente
+                
+                if not periodos_pendientes:
+                    st.success("Este contrato está completamente al día. No hay periodos pendientes.")
+                else:
+                    with st.form("f_pago", clear_on_submit=True):
+                        per_sel = st.selectbox("Periodo a Pagar (Oculta los meses ya saldados)", periodos_pendientes)
+                        saldo_pendiente = float(deuda_por_periodo.get(per_sel, canon_base))
+                        
+                        monto = st.number_input(
+                            "Capital Recibido ($)", 
+                            min_value=0.0, 
+                            max_value=saldo_pendiente, 
+                            value=saldo_pendiente, 
+                            step=10000.0
+                        )
+                        ref = st.text_input("Referencia Bancaria")
+                        
+                        if st.form_submit_button("Asentar Transacción") and monto > 0:
+                            if run_transact("INSERT INTO Pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco) VALUES (%s, %s, %s, %s)", (int(dat_con['id']), str(per_sel), float(monto), str(ref))):
+                                st.toast("Pago registrado en el Ledger."); time.sleep(1); st.rerun()
             with c2:
-                df_hist = run_query("SELECT p.fecha_registro as Timestamp, u.nombre_unidad as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM Pagos p JOIN Contratos c ON p.contrato_id = c.id JOIN Unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 10")
+                # LEFT JOIN Para que se vean los pagos huérfanos
+                df_hist = run_query("SELECT p.fecha_registro as Timestamp, IFNULL(u.nombre_unidad, 'Desconocido') as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM Pagos p LEFT JOIN Contratos c ON p.contrato_id = c.id LEFT JOIN Unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 10")
                 if not df_hist.empty:
                     df_hist['Volumen'] = df_hist['Volumen'].apply(fmt_cop)
                     st.dataframe(df_hist, use_container_width=True, hide_index=True)
-                else: st.info("No hay pagos.")
+                else: st.info("No hay pagos en la base de datos.")
 
     with t2:
-        st.markdown("#### Anular Transacción (Cuidado)")
-        df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, u.nombre_unidad, i.nombre_completo FROM Pagos p JOIN Contratos c ON p.contrato_id = c.id JOIN Unidades u ON c.unidad_id = u.id JOIN Inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
+        st.markdown("#### Anular Transacción del Sistema")
+        st.write("Elimina permanentemente un pago. El saldo regresará al estado de cuenta del cliente.")
+        # Se listan los pagos, incluso si el contrato fue cortado
+        df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Unidad Borrada') as nombre_unidad, IFNULL(i.nombre_completo, 'Cliente Borrado') as nombre_completo, p.periodo_pagado FROM Pagos p LEFT JOIN Contratos c ON p.contrato_id = c.id LEFT JOIN Unidades u ON c.unidad_id = u.id LEFT JOIN Inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
+        
         if not df_pagos_del.empty:
             with st.form("f_del_pago"):
-                opc_p = {f"[{str(r['fecha_registro'])[:10]}] {r['nombre_unidad']} - {r['nombre_completo']} : {fmt_cop(r['monto_pagado'])}": r['id'] for _, r in df_pagos_del.iterrows()}
+                opc_p = {f"[{str(r['fecha_registro'])[:10]}] {r['nombre_unidad']} - {r['nombre_completo']} | Periodo: {r['periodo_pagado']} | Monto: {fmt_cop(r['monto_pagado'])}": r['id'] for _, r in df_pagos_del.iterrows()}
                 sel_p = st.selectbox("Seleccionar Pago a Revertir", list(opc_p.keys()))
-                if st.form_submit_button("🗑️ Eliminar Pago de Base de Datos"):
+                if st.form_submit_button("🗑️ Eliminar Pago"):
                     if run_transact("DELETE FROM Pagos WHERE id = %s", (opc_p[sel_p],)):
-                        st.toast("Pago eliminado del sistema."); time.sleep(1); st.rerun()
-        else: st.info("No hay pagos recientes para anular.")
+                        st.toast("Pago eliminado. Saldo revertido."); time.sleep(1.5); st.rerun()
+        else: st.info("No hay pagos en el Ledger para anular.")
 
 # ----------------------------------------
 # VACANCIA
