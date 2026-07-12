@@ -9,16 +9,17 @@ from dateutil.relativedelta import relativedelta
 # ==========================================
 # 1. CONFIGURACIÓN GLOBAL
 # ==========================================
-st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="expanded", page_icon="🏢")
+st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS PREMIUM (NEÓN MORADO / ZERO ROJOS)
+# 2. MOTOR CSS PREMIUM (MONOCROMÁTICO, NEÓN MORADO Y ZERO ROJOS)
 # ==========================================
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 
+        /* Fondo Dark Premium */
         .stApp { background-color: #050505 !important; color: #FAFAFA !important; }
         #MainMenu, footer, header, [data-testid="stHeader"] {display: none !important;}
         
@@ -26,30 +27,37 @@ st.markdown("""
         ::-webkit-scrollbar-thumb { background: #222222; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8B5CF6; }
 
+        /* 🛡️ EXTERMINIO DE BORDES ROJOS NATIVOS */
         *:focus { outline: none !important; box-shadow: none !important; }
         
-        /* INPUTS Y SELECTS: FOCUS MORADO NEÓN */
         div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"], .stDateInput > div {
-            background-color: #111111 !important; border: 1px solid #333333 !important;
-            border-radius: 8px !important; color: white !important;
+            background-color: #111111 !important;
+            border: 1px solid #222222 !important;
+            border-radius: 8px !important;
+            color: white !important;
         }
         div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within, .stDateInput > div:focus-within {
-            border-color: #8B5CF6 !important; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5) !important; background-color: #161616 !important;
+            border-color: #8B5CF6 !important;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4) !important;
+            background-color: #161616 !important;
         }
         input, select, textarea { color: white !important; background: transparent !important; outline: none !important; }
 
-        /* PESTAÑAS (TABS) - SIN ROJOS */
+        /* PESTAÑAS (TABS) - MORADO / CERO ROJO */
         div[data-testid="stTabs"] button[role="tab"] { color: #A1A1AA !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; }
         div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; border-bottom-color: #8B5CF6 !important; }
-        div[data-baseweb="tab-highlight"] { display: none !important;}
+        div[data-baseweb="tab-highlight"] { background-color: #8B5CF6 !important; display: none !important;}
 
-        /* Formularios */
+        /* Formularios Modernos */
         [data-testid="stForm"] {
-            background: #0A0A0A !important; border: 1px solid #222222 !important;
-            border-radius: 12px !important; padding: 30px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
+            background: #0A0A0A !important;
+            border: 1px solid #222222 !important;
+            border-radius: 12px !important;
+            padding: 30px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
         }
 
-        /* Botones Normales (Morados) */
+        /* 🟣 BOTONES ESTÁNDAR (Gradiente Morado) */
         button[kind="secondary"] {
             background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 6px !important;
@@ -57,49 +65,36 @@ st.markdown("""
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
         }
         button[kind="secondary"]:hover {
-            transform: translateY(-2px) !important; box-shadow: 0 5px 20px rgba(139, 92, 246, 0.6) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.6) !important;
             background: linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%) !important;
         }
 
-        /* Botones Destrucción (Rojos) */
+        /* 🔴 BOTONES DE DESTRUCCIÓN CRÍTICA */
         button[kind="primary"] {
             background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 6px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
         }
-        button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 5px 20px rgba(239, 68, 68, 0.6) !important; }
-
-        /* Toggles (Interruptores Modo App) */
-        [data-testid="stToggle"] [data-baseweb="checkbox"] > div {
-            background-color: #222222 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-        [data-testid="stToggle"] [data-baseweb="checkbox"] div[data-checked="true"] {
-            background-color: #8B5CF6 !important; border-color: #8B5CF6 !important; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5) !important;
+        button[kind="primary"]:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.6) !important;
         }
 
-        /* SIDEBAR (Eliminación de puntos rojos nativos) */
+        /* Ocultamiento preventivo de la barra lateral nativa en móviles si se desea */
         [data-testid="stSidebar"] { background-color: #09090B !important; border-right: 1px solid #1F1F22 !important; }
-        div[role="radiogroup"] label div[data-baseweb="radio"], div[role="radiogroup"] label > div:first-child { display: none !important; }
-        
-        div[role="radiogroup"] label {
-            background: transparent !important; border-radius: 6px !important;
-            padding: 12px 15px !important; margin: 4px 8px !important; transition: all 0.2s ease !important; cursor: pointer !important;
-        }
-        div[role="radiogroup"] label p { color: #A1A1AA !important; font-weight: 500 !important; margin: 0 !important; }
-        div[role="radiogroup"] label[data-checked="true"] {
-            background: rgba(139, 92, 246, 0.15) !important; border-left: 4px solid #8B5CF6 !important;
-        }
-        div[role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
 
         /* Tarjetas de Métricas */
         [data-testid="stMetric"] { 
             background: #111111; border: 1px solid #222222; border-radius: 12px; padding: 20px; 
             border-top: 2px solid #8B5CF6; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s ease;
         }
-        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 2px solid #00E5FF; }
+        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 2px solid #10B981; }
         
         [data-testid="stDataFrame"] { background-color: #0A0A0A; border-radius: 8px; padding: 10px; border: 1px solid #222222; }
+        [data-testid="stAlert"] { background-color: #111111 !important; border: 1px solid #222222 !important; color: #FFFFFF !important; }
+        
         h1, h2, h3, h4 { color: #FFFFFF !important; font-weight: 700 !important; }
     </style>
 """, unsafe_allow_html=True)
@@ -166,7 +161,7 @@ def inicializar_bd():
 inicializar_bd()
 
 # ==========================================
-# 4. UTILS FINANCIEROS Y DE MORA
+# 4. UTILS FINANCIEROS Y DE CARTERA
 # ==========================================
 def fmt_cop(val):
     try: return f"${int(float(val)):,}".replace(',', '.')
@@ -188,7 +183,7 @@ def get_color_estado(val):
     return ''
 
 # ==========================================
-# 5. LOGIN Y NAVEGACIÓN (CON MODO APP)
+# 5. CONTROL DE ACCESO
 # ==========================================
 if 'logeado' not in st.session_state: st.session_state.update({'logeado': False, 'rol': None, 'nombre_usuario': None})
 
@@ -209,53 +204,54 @@ if not st.session_state['logeado']:
                 else: st.error("Acceso denegado.")
     st.stop()
 
-# ----------------- SIDEBAR RESPONSIVO -----------------
-with st.sidebar:
-    render_logo()
-    st.markdown(f"<div style='background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 10px;'><b style='color:white;'>{st.session_state['nombre_usuario']}</b><br><span style='color:#8B5CF6; font-size:11px; font-weight:bold;'>{st.session_state['rol'].upper()}</span></div>", unsafe_allow_html=True)
-    
-    modo_app = st.toggle("📱 Modo App (Celular)")
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    menu = {"📊 Panel General": "dash", "🏢 Inmuebles y Activos": "activos", "👥 Contratos": "contratos", "💰 Tesorería": "tesoreria"}
-    if st.session_state['rol'] == 'Administrador': menu["⚙️ Seguridad IAM"] = "seguridad"
-    
-    if not modo_app:
-        mod = menu[st.radio("Navegación", list(menu.keys()), label_visibility="collapsed")]
-    else:
-        st.info("Navegación táctil activada en la pantalla principal. Puedes cerrar este menú lateral.")
-        
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    if st.button("Cerrar Sesión"): st.session_state['logeado'] = False; st.rerun()
+# ==========================================
+# 6. ENRUTADOR SUPREMO (BARRA SUPERIOR PERFECTA PARA MÓVIL)
+# ==========================================
+render_logo()
 
-# ----------------- RENDERIZADO DEL MENÚ MÓVIL (TOP) -----------------
-if modo_app:
-    st.markdown("<h4 style='color:#8B5CF6;'>📱 Menú de Navegación Rápida</h4>", unsafe_allow_html=True)
-    nav_movil = st.selectbox("Seleccionar Módulo", list(menu.keys()), label_visibility="collapsed")
-    mod = menu[nav_movil]
-    st.divider()
+# Definición del diccionario de módulos del ecosistema
+menu = {
+    "📊 Panel General": "dash", 
+    "🏢 Inmuebles y Activos": "activos", 
+    "👥 Contratos": "contratos", 
+    "💰 Tesorería": "tesoreria"
+}
+if st.session_state['rol'] == 'Administrador': 
+    menu["⚙️ Seguridad e Inyección IAM"] = "seguridad"
+
+# El selector horizontal maestro (Navbar Superior)
+c_nav, c_out = st.columns([5, 1])
+with c_nav:
+    nav_seleccionada = st.selectbox("MÓDULO DE OPERACIÓN", list(menu.keys()), label_visibility="collapsed")
+    mod = menu[nav_seleccionada]
+with c_out:
+    if st.button("🚪 SALIR"):
+        st.session_state['logeado'] = False; st.rerun()
+
+st.divider()
 
 # ==========================================
-# 6. MÓDULOS DE NEGOCIO
+# 7. MÓDULOS OPERATIVOS
 # ==========================================
 
 # ----------------------------------------
-# DASHBOARD (CENTRO DE MANDO Y MORA)
+# PANEL GENERAL (DASHBOARD + RADAR DE COBROS)
 # ----------------------------------------
 if mod == "dash":
-    st.markdown("<h2>Mando Gerencial 📊</h2>", unsafe_allow_html=True)
+    st.markdown("<h3>Mando Gerencial 📊</h3>", unsafe_allow_html=True)
     
     t_con = run_query("SELECT COUNT(*) as t FROM ap_contratos WHERE estado_contrato = 'Vigente'")
     t_ing = run_query("SELECT SUM(monto_pagado) as t FROM ap_pagos WHERE estado_pago = 'Aplicado'")
     df_libres = run_query("SELECT COUNT(*) as t FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
     
-    # MOTOR DE CÁLCULO DE MORA EN TIEMPO REAL
+    # MOTOR DE LIQUIDACIÓN Y ESCANEO DE COBROS (MORA REAL)
     df_activos = run_query("SELECT c.id, c.fecha_inicio, c.fecha_fin, c.dia_pago_mensual, c.canon_pactado, u.nombre_unidad, p.nombre as prop, i.nombre_completo FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_propiedades p ON u.propiedad_id = p.id JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE c.estado_contrato = 'Vigente'")
     df_pagos_totales = run_query("SELECT contrato_id, periodo_pagado, SUM(monto_pagado) as total_pagado FROM ap_pagos GROUP BY contrato_id, periodo_pagado")
     
     pagos_dict = {}
     if not df_pagos_totales.empty:
-        for _, r in df_pagos_totales.iterrows(): pagos_dict[(r['contrato_id'], r['periodo_pagado'])] = float(r['total_pagado'])
+        for _, r in df_pagos_totales.iterrows(): 
+            pagos_dict[(r['contrato_id'], r['periodo_pagado'])] = float(r['total_pagado'])
             
     hoy = datetime.date.today()
     mes_actual_str = hoy.strftime("%Y-%m")
@@ -276,7 +272,7 @@ if mod == "dash":
                     if pagado < canon:
                         deuda_restante = canon - pagado
                         deuda_total += deuda_restante
-                        dias_atraso = "Mes anterior(es)"
+                        dias_atraso = "Mes vencido"
                         if p == mes_actual_str: dias_atraso = f"{hoy.day - int(c['dia_pago_mensual'])} días"
                         
                         mora_list.append({
@@ -288,7 +284,7 @@ if mod == "dash":
                         })
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Contratos Vigentes", f"{t_con.iloc[0]['t'] if not t_con.empty else 0}")
+    c1.metric("Contratos Activos", f"{t_con.iloc[0]['t'] if not t_con.empty else 0}")
     c2.metric("Recaudo Histórico", fmt_cop(t_ing.iloc[0]['t'] if not t_ing.empty and pd.notna(t_ing.iloc[0]['t']) else 0))
     c3.metric("Cartera en Mora", fmt_cop(deuda_total))
     c4.metric("Unidades Disponibles", f"{df_libres.iloc[0]['t'] if not df_libres.empty else 0}")
@@ -297,12 +293,12 @@ if mod == "dash":
     t1, t2, t3 = st.tabs(["🚨 Centro de Cobros (Mora)", "🏢 Estado del Inventario", "📈 Radar de Transacciones"])
     
     with t1:
-        st.markdown("#### Cartera Pendiente por Recaudar")
+        st.markdown("#### Cuentas Pendientes por Cobrar Hoy")
         if mora_list:
             df_mora = pd.DataFrame(mora_list)
             df_mora['Saldo en Mora'] = df_mora['Saldo en Mora'].apply(fmt_cop)
             st.dataframe(df_mora, use_container_width=True, hide_index=True)
-        else: st.success("🎉 Finanzas sanas. No hay clientes en mora actualmente.")
+        else: st.success("🎉 Libro de cobros limpio. No hay deudores en mora.")
             
     with t2:
         ca, cb = st.columns(2)
@@ -312,23 +308,23 @@ if mod == "dash":
             if not df_l.empty:
                 df_l['Canon Base'] = df_l['Canon Base'].apply(fmt_cop)
                 st.dataframe(df_l, use_container_width=True, hide_index=True)
-            else: st.info("Inventario lleno.")
+            else: st.info("Inventario ocupado al 100%.")
         with cb:
-            st.markdown("<h4 style='color:#A1A1AA;'>Inactivos / Mantenimiento</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#A1A1AA;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
             df_inact = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.activo = FALSE OR p.activo = FALSE")
             if not df_inact.empty: st.dataframe(df_inact, use_container_width=True, hide_index=True)
-            else: st.info("Todos los inmuebles están operativos.")
+            else: st.info("Todos los complejos inmobiliarios están activos.")
 
     with t3:
-        st.markdown("#### Últimos ingresos a caja")
+        st.markdown("#### Historial Reciente de Caja")
         df_p = run_query("SELECT p.fecha_registro as Fecha, IFNULL(u.nombre_unidad, 'Unidad Borrada') as Origen, p.periodo_pagado as 'Periodo Cubierto', p.monto_pagado as Ingreso FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
         if not df_p.empty:
             df_p['Ingreso'] = df_p['Ingreso'].apply(fmt_cop)
             st.dataframe(df_p, use_container_width=True, hide_index=True)
-        else: st.info("Registro contable en ceros.")
+        else: st.info("No hay transacciones registradas.")
 
 # ----------------------------------------
-# ACTIVOS
+# INMUEBLES Y ACTIVOS
 # ----------------------------------------
 elif mod == "activos":
     st.markdown("<h2>Gestión de Inmuebles 🏢</h2>", unsafe_allow_html=True)
@@ -384,7 +380,7 @@ elif mod == "activos":
                 df_all_u = run_query("SELECT id, nombre_unidad, activo FROM ap_unidades")
                 if not df_all_u.empty:
                     sel_tog_u = st.selectbox("Seleccionar Unidad", [f"[{'Activa' if r['activo'] else 'Inactiva'}] {r['nombre_unidad']}" for _, r in df_all_u.iterrows()])
-                    if st.form_submit_button("Alternar Estado "):
+                    if st.form_submit_button("Alternar Estado"):
                         nom_u = sel_tog_u.split("] ")[1]
                         nuevo_estado = 0 if "Activa" in sel_tog_u else 1
                         run_transact("UPDATE ap_unidades SET activo = %s WHERE nombre_unidad = %s", (nuevo_estado, nom_u))
@@ -445,6 +441,7 @@ elif mod == "contratos":
                 opc_kill = {f"[{r['id']}] {r['prop']} - {r['nombre_unidad']} | {r['nombre_completo']}": (r['id'], r['unidad_id']) for _, r in df_activos.iterrows()}
                 sel_kill = st.selectbox("Seleccionar contrato a terminar:", list(opc_kill.keys()))
                 f_real = st.date_input("Fecha real de entrega del inmueble:")
+                # 🔴 BOTÓN ROJO EXCLUSIVO PARA DESTRUCCIÓN
                 if st.form_submit_button("🛑 Ejecutar Terminación Definitiva", type="primary"):
                     id_con, id_uni = opc_kill[sel_kill]
                     str_f_real = f_real.strftime('%Y-%m-%d')
@@ -453,7 +450,7 @@ elif mod == "contratos":
                         st.toast("Contrato cerrado."); time.sleep(1.5); st.rerun()
 
 # ----------------------------------------
-# TESORERÍA
+# TESORERÍA (AUTO-COBRO POR SALDOS RESTANTES)
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería 💰</h2>", unsafe_allow_html=True)
@@ -471,6 +468,7 @@ elif mod == "tesoreria":
                 dat_con = opc_c[sel_c]
                 canon_base = float(dat_con['canon_pactado'])
                 
+                # Descontar lo pagado para ocultar periodos saldados o permitir abonos
                 df_pagos_contrato = run_query("SELECT periodo_pagado, SUM(monto_pagado) as total_pagado FROM ap_pagos WHERE contrato_id = %s GROUP BY periodo_pagado", (int(dat_con['id']),))
                 pagos_map = {row['periodo_pagado']: float(row['total_pagado']) for _, row in df_pagos_contrato.iterrows()} if not df_pagos_contrato.empty else {}
                 
@@ -505,18 +503,20 @@ elif mod == "tesoreria":
                     st.dataframe(df_hist, use_container_width=True, hide_index=True)
 
     with t2:
+        st.markdown("#### Anular Transacción del Sistema")
         df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
         if not df_pagos_del.empty:
             with st.form("f_del_pago"):
                 opc_p = {f"[{str(r['fecha_registro'])[:10]}] {r['nombre_unidad']} - {r['nombre_completo']} | {r['periodo_pagado']} | {fmt_cop(r['monto_pagado'])}": r['id'] for _, r in df_pagos_del.iterrows()}
                 sel_p = st.selectbox("Seleccionar Pago a Revertir", list(opc_p.keys()))
+                # 🔴 BOTÓN ROJO EXCLUSIVO PARA ELIMINACIÓN
                 if st.form_submit_button("🗑️ Eliminar Pago de Base de Datos", type="primary"):
                     if run_transact("DELETE FROM ap_pagos WHERE id = %s", (int(opc_p[sel_p]),)):
                         st.toast("Pago eliminado."); time.sleep(1); st.rerun()
         else: st.info("No hay pagos registrados.")
 
 # ----------------------------------------
-# SEGURIDAD IAM (Y DATA SEMILLA)
+# SEGURIDAD IAM & GENERADOR DATA SEMILLA (BOTÓN DIOS)
 # ----------------------------------------
 elif mod == "seguridad":
     st.markdown("<h2>Seguridad IAM ⚙️</h2>", unsafe_allow_html=True)
@@ -538,28 +538,29 @@ elif mod == "seguridad":
             if not df_u.empty: st.dataframe(df_u.style.map(get_color_estado, subset=['Estado']), use_container_width=True, hide_index=True)
             
     with t2:
-        st.markdown("#### Generador Masivo de Ecosistema Inmobiliario")
-        st.write("Con un solo clic, esta herramienta inyectará: 5 Edificios, 20 Apartamentos y 5 Inquilinos con contratos y pagos simulados (algunos en mora). Ideal para probar el rendimiento del Dashboard.")
+        st.markdown("#### Generador Masivo de Infraestructura y Clientes")
+        st.write("Este comando inyectará de golpe 5 Torres comerciales, 20 Suites de apartamentos e inquilinos corporativos con historial financiero cruzado.")
         if st.button("🚀 INYECTAR 5 EDIFICIOS Y CONTRATOS (DEMO)"):
-            with st.spinner("Construyendo matriz de infraestructura y contratos..."):
+            with st.spinner("Minando infraestructura de prueba..."):
                 # 1. Inyectar Propiedades y Unidades
                 for i in range(1, 6):
-                    run_transact("INSERT INTO ap_propiedades (nombre, direccion) VALUES (%s, %s)", (f"Torre Omega {i}", f"Distrito Financiero {i}"))
+                    run_transact("INSERT INTO ap_propiedades (nombre, direccion) VALUES (%s, %s)", (f"Torre Omega {i}", f"Distrito Financiero #{i}"))
                     pid = run_query("SELECT id FROM ap_propiedades ORDER BY id DESC LIMIT 1").iloc[0]['id']
                     for j in range(1, 5):
-                        run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (int(pid), f"Suite Comercial 0{j}", float(1000000 + (j*200000))))
+                        run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (int(pid), f"Apto {j}01", float(700000 + (j*100000))))
                 
-                # 2. Inyectar Clientes
+                # 2. Inyectar Inquilinos
                 nombres = ["Bruce Wayne", "Tony Stark", "Lex Luthor", "Oliver Queen", "Norman Osborn"]
                 for i, nom in enumerate(nombres):
-                    run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (f"900000{i}", nom, f"555-000{i}"))
+                    run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (f"NIT-9004{i}", nom, f"+57 300 440{i}"))
                 
-                # 3. Firmar Contratos de prueba
+                # 3. Firmar Contratos con desfase temporal para provocar alarmas de Mora
                 clientes_id = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 5")['id'].tolist()
                 unidades_id = run_query("SELECT id, canon_base FROM ap_unidades WHERE estado_vacancia='Disponible' LIMIT 5")
                 hoy = datetime.date.today()
                 
                 for idx, row in unidades_id.iterrows():
+                    # Hace 2 meses para que el algoritmo detecte deudas anteriores
                     f_ini = (hoy - relativedelta(months=2)).strftime('%Y-%m-%d')
                     f_fin = (hoy + relativedelta(months=10)).strftime('%Y-%m-%d')
                     uid = int(row['id'])
@@ -569,11 +570,12 @@ elif mod == "seguridad":
                     run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (uid, cid, canon, 5, f_ini, f_fin))
                     run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (uid,))
                     
+                    # El primer cliente abona algo, los otros quedan en mora absoluta
                     con_id = run_query("SELECT id FROM ap_contratos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                     if idx == 0: 
                         per_pago = (hoy - relativedelta(months=2)).strftime('%Y-%m')
-                        run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco) VALUES (%s, %s, %s, %s)", (int(con_id), per_pago, canon, "TRANSFER-TEST"))
+                        run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco) VALUES (%s, %s, %s, %s)", (int(con_id), per_pago, canon, "COBRO-SEDE-CENTRAL"))
                 
-                st.success("✅ ¡Arquitectura de prueba inyectada con éxito! Ve al 'Panel General' para ver el cobrador automático en acción.")
-                time.sleep(2)
+                st.success("✅ Estructuras indexadas. Dirígete al módulo 'Panel General' para validar el cobrador de mora.")
+                time.sleep(1.5)
                 st.rerun()
