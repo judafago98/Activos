@@ -28,6 +28,7 @@ st.markdown("""
 
         *:focus { outline: none !important; box-shadow: none !important; }
         
+        /* INPUTS Y SELECTS: FOCUS MORADO NEÓN */
         div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"], .stDateInput > div {
             background-color: #111111 !important; border: 1px solid #333333 !important;
             border-radius: 8px !important; color: white !important;
@@ -37,15 +38,18 @@ st.markdown("""
         }
         input, select, textarea { color: white !important; background: transparent !important; outline: none !important; }
 
+        /* PESTAÑAS (TABS) - SIN ROJOS */
         div[data-testid="stTabs"] button[role="tab"] { color: #A1A1AA !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; }
         div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; border-bottom-color: #8B5CF6 !important; }
         div[data-baseweb="tab-highlight"] { display: none !important;}
 
+        /* Formularios */
         [data-testid="stForm"] {
             background: #0A0A0A !important; border: 1px solid #222222 !important;
             border-radius: 12px !important; padding: 30px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
         }
 
+        /* Botones Normales (Morados) */
         button[kind="secondary"] {
             background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 6px !important;
@@ -57,6 +61,7 @@ st.markdown("""
             background: linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%) !important;
         }
 
+        /* Botones Destrucción (Rojos) */
         button[kind="primary"] {
             background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 6px !important;
@@ -65,6 +70,15 @@ st.markdown("""
         }
         button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 5px 20px rgba(239, 68, 68, 0.6) !important; }
 
+        /* Toggles (Interruptores Modo App) */
+        [data-testid="stToggle"] [data-baseweb="checkbox"] > div {
+            background-color: #222222 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        [data-testid="stToggle"] [data-baseweb="checkbox"] div[data-checked="true"] {
+            background-color: #8B5CF6 !important; border-color: #8B5CF6 !important; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5) !important;
+        }
+
+        /* SIDEBAR (Eliminación de puntos rojos nativos) */
         [data-testid="stSidebar"] { background-color: #09090B !important; border-right: 1px solid #1F1F22 !important; }
         div[role="radiogroup"] label div[data-baseweb="radio"], div[role="radiogroup"] label > div:first-child { display: none !important; }
         
@@ -78,6 +92,7 @@ st.markdown("""
         }
         div[role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
 
+        /* Tarjetas de Métricas */
         [data-testid="stMetric"] { 
             background: #111111; border: 1px solid #222222; border-radius: 12px; padding: 20px; 
             border-top: 2px solid #8B5CF6; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s ease;
@@ -173,7 +188,7 @@ def get_color_estado(val):
     return ''
 
 # ==========================================
-# 5. LOGIN Y NAVEGACIÓN
+# 5. LOGIN Y NAVEGACIÓN (CON MODO APP)
 # ==========================================
 if 'logeado' not in st.session_state: st.session_state.update({'logeado': False, 'rol': None, 'nombre_usuario': None})
 
@@ -194,16 +209,35 @@ if not st.session_state['logeado']:
                 else: st.error("Acceso denegado.")
     st.stop()
 
+# ----------------- SIDEBAR RESPONSIVO -----------------
 with st.sidebar:
     render_logo()
-    st.markdown(f"<div style='background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 20px;'><b style='color:white;'>{st.session_state['nombre_usuario']}</b><br><span style='color:#8B5CF6; font-size:11px; font-weight:bold;'>{st.session_state['rol'].upper()}</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 10px;'><b style='color:white;'>{st.session_state['nombre_usuario']}</b><br><span style='color:#8B5CF6; font-size:11px; font-weight:bold;'>{st.session_state['rol'].upper()}</span></div>", unsafe_allow_html=True)
+    
+    modo_app = st.toggle("📱 Modo App (Celular)")
+    st.markdown("<br>", unsafe_allow_html=True)
     
     menu = {"📊 Panel General": "dash", "🏢 Inmuebles y Activos": "activos", "👥 Contratos": "contratos", "💰 Tesorería": "tesoreria"}
     if st.session_state['rol'] == 'Administrador': menu["⚙️ Seguridad IAM"] = "seguridad"
     
-    mod = menu[st.radio("Navegación", list(menu.keys()), label_visibility="collapsed")]
+    if not modo_app:
+        mod = menu[st.radio("Navegación", list(menu.keys()), label_visibility="collapsed")]
+    else:
+        st.info("Navegación táctil activada en la pantalla principal. Puedes cerrar este menú lateral.")
+        
     st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("Cerrar Sesión"): st.session_state['logeado'] = False; st.rerun()
+
+# ----------------- RENDERIZADO DEL MENÚ MÓVIL (TOP) -----------------
+if modo_app:
+    st.markdown("<h4 style='color:#8B5CF6;'>📱 Menú de Navegación Rápida</h4>", unsafe_allow_html=True)
+    nav_movil = st.selectbox("Seleccionar Módulo", list(menu.keys()), label_visibility="collapsed")
+    mod = menu[nav_movil]
+    st.divider()
+
+# ==========================================
+# 6. MÓDULOS DE NEGOCIO
+# ==========================================
 
 # ----------------------------------------
 # DASHBOARD (CENTRO DE MANDO Y MORA)
@@ -211,7 +245,6 @@ with st.sidebar:
 if mod == "dash":
     st.markdown("<h2>Mando Gerencial 📊</h2>", unsafe_allow_html=True)
     
-    # Cálculos para Métricas
     t_con = run_query("SELECT COUNT(*) as t FROM ap_contratos WHERE estado_contrato = 'Vigente'")
     t_ing = run_query("SELECT SUM(monto_pagado) as t FROM ap_pagos WHERE estado_pago = 'Aplicado'")
     df_libres = run_query("SELECT COUNT(*) as t FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
@@ -234,7 +267,6 @@ if mod == "dash":
             canon = float(c['canon_pactado'])
             periodos = generar_periodos_contrato(c['fecha_inicio'], c['fecha_fin'])
             for p in periodos:
-                # Determinar si el periodo está vencido
                 vencido = False
                 if p < mes_actual_str: vencido = True
                 elif p == mes_actual_str and hoy.day > int(c['dia_pago_mensual']): vencido = True
@@ -244,7 +276,6 @@ if mod == "dash":
                     if pagado < canon:
                         deuda_restante = canon - pagado
                         deuda_total += deuda_restante
-                        
                         dias_atraso = "Mes anterior(es)"
                         if p == mes_actual_str: dias_atraso = f"{hoy.day - int(c['dia_pago_mensual'])} días"
                         
@@ -393,7 +424,7 @@ elif mod == "contratos":
                 with ca:
                     sel_i = st.selectbox("Arrendatario", list(opc_i.keys()))
                     sel_u = st.selectbox("Activo Objetivo", list(opc_u.keys()))
-                    dia = st.number_input("Día de Corte Mensual (Fecha Límite)", value=5, min_value=1, max_value=31)
+                    dia = st.number_input("Día de Corte Mensual (Límite)", value=5, min_value=1, max_value=31)
                 with cb:
                     can = st.number_input("Carga Monetaria Mensual ($)", step=50000.0)
                     fi = st.date_input("Fecha Inicio")
@@ -508,7 +539,7 @@ elif mod == "seguridad":
             
     with t2:
         st.markdown("#### Generador Masivo de Ecosistema Inmobiliario")
-        st.write("Con un solo clic, esta herramienta inyectará: 5 Edificios, 20 Apartamentos comerciales y 5 Inquilinos con contratos y pagos simulados (algunos en mora). Ideal para probar el rendimiento del Dashboard.")
+        st.write("Con un solo clic, esta herramienta inyectará: 5 Edificios, 20 Apartamentos y 5 Inquilinos con contratos y pagos simulados (algunos en mora). Ideal para probar el rendimiento del Dashboard.")
         if st.button("🚀 INYECTAR 5 EDIFICIOS Y CONTRATOS (DEMO)"):
             with st.spinner("Construyendo matriz de infraestructura y contratos..."):
                 # 1. Inyectar Propiedades y Unidades
@@ -529,7 +560,6 @@ elif mod == "seguridad":
                 hoy = datetime.date.today()
                 
                 for idx, row in unidades_id.iterrows():
-                    # Fechas variadas para forzar moras
                     f_ini = (hoy - relativedelta(months=2)).strftime('%Y-%m-%d')
                     f_fin = (hoy + relativedelta(months=10)).strftime('%Y-%m-%d')
                     uid = int(row['id'])
@@ -539,7 +569,6 @@ elif mod == "seguridad":
                     run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (uid, cid, canon, 5, f_ini, f_fin))
                     run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (uid,))
                     
-                    # Generar 1 pago parcial al primer contrato para probar mora
                     con_id = run_query("SELECT id FROM ap_contratos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                     if idx == 0: 
                         per_pago = (hoy - relativedelta(months=2)).strftime('%Y-%m')
