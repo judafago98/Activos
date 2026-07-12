@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 # ==========================================
 # 1. CONFIGURACIÓN GLOBAL
 # ==========================================
-st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
+st.set_page_config(page_title="Activos", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
 # ==========================================
 # 2. MOTOR CSS PREMIUM (MONOCROMÁTICO, NEÓN MORADO Y ZERO ROJOS)
