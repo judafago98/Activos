@@ -12,96 +12,97 @@ from dateutil.relativedelta import relativedelta
 st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS PREMIUM (GRIS PIZARRA & AZUL CIBERNÉTICO)
+# 2. MOTOR CSS: MODO CLARO Y LUMINOSO (LIGHT MODE)
 # ==========================================
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 
-        /* Fondo Gris Pizarra (Previene el efecto gelatina en pantallas OLED de iPhone) */
-        .stApp { background-color: #1E293B !important; color: #F8FAFC !important; }
+        /* Fondo 100% Claro (Gris perla muy suave) */
+        .stApp { background-color: #F4F7F9 !important; color: #111827 !important; }
         #MainMenu, footer, header, [data-testid="stHeader"] {display: none !important;}
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #38BDF8; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563EB; }
 
         *:focus { outline: none !important; box-shadow: none !important; }
         
-        /* INPUTS Y SELECTS: GRIS PROFUNDO CON FOCUS CIAN */
-        div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"], .stDateInput > div {
-            background-color: #0F172A !important; 
-            border: 1px solid #334155 !important;
+        /* INPUTS Y SELECTS: BLANCOS CON TEXTO NEGRO Y BORDE AZUL AL TOCAR */
+        div[data-baseweb="input"] > div, div[data-baseweb="select"] > div, textarea, .stDateInput > div > div {
+            background-color: #FFFFFF !important; 
+            border: 1px solid #D1D5DB !important;
             border-radius: 8px !important; 
-            color: #F8FAFC !important;
+            color: #111827 !important;
         }
-        div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within, .stDateInput > div:focus-within {
-            border-color: #38BDF8 !important; 
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important; 
-            background-color: #1E293B !important;
+        div[data-baseweb="input"] > div:focus-within, div[data-baseweb="select"] > div:focus-within, .stDateInput > div > div:focus-within {
+            border-color: #2563EB !important; 
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important; 
+            background-color: #FFFFFF !important;
         }
-        input, select, textarea { color: #F8FAFC !important; background: transparent !important; outline: none !important; }
-        li[role="option"] { color: #F8FAFC !important; }
+        input, select, textarea { color: #111827 !important; background: transparent !important; outline: none !important; }
+        div[data-baseweb="select"] span { color: #111827 !important; }
+        li[role="option"] { color: #111827 !important; }
 
-        /* PESTAÑAS (TABS) - AZUL CIAN / CERO ROJO */
-        div[data-testid="stTabs"] button[role="tab"] { color: #94A3B8 !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; background: transparent !important;}
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #38BDF8 !important; border-bottom-color: #38BDF8 !important; background: transparent !important;}
+        /* PESTAÑAS (TABS) - AZULES Y LIMPIAS */
+        div[data-testid="stTabs"] button[role="tab"] { color: #6B7280 !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; background: transparent !important;}
+        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #2563EB !important; border-bottom-color: #2563EB !important; background: transparent !important;}
         div[data-baseweb="tab-highlight"] { display: none !important;}
 
-        /* Formularios y Cajas con Sombra Suave */
+        /* Formularios (Blancos con sombra suave) */
         [data-testid="stForm"] {
-            background: #0F172A !important; border: 1px solid #334155 !important;
+            background: #FFFFFF !important; border: 1px solid #E5E7EB !important;
             border-radius: 12px !important; padding: 30px !important; 
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
         }
 
-        /* Botones Normales (Azul y Cian) */
+        /* Botones Normales (Azul Rey Sólido) */
         button[kind="secondary"] {
-            background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%) !important;
+            background: #2563EB !important;
             color: #FFFFFF !important; border: none !important; border-radius: 8px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2) !important;
         }
         button[kind="secondary"]:hover {
-            transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4) !important;
+            transform: translateY(-2px) !important; background: #1D4ED8 !important;
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3) !important;
         }
 
-        /* Botones de Destrucción (Único rojo permitido por seguridad) */
+        /* Botones de Destrucción (Rojo para anular) */
         button[kind="primary"] {
-            background: linear-gradient(135deg, #EF4444 0%, #991B1B 100%) !important;
+            background: #EF4444 !important;
             color: #FFFFFF !important; border: none !important; border-radius: 8px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2) !important;
         }
-        button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4) !important; }
+        button[kind="primary"]:hover { transform: translateY(-2px) !important; background: #DC2626 !important; box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3) !important; }
 
-        /* Tarjetas de Métricas */
+        /* Tarjetas de Métricas (Blancas) */
         [data-testid="stMetric"] { 
-            background: #0F172A; border: 1px solid #334155; border-radius: 12px; padding: 20px; 
-            border-top: 3px solid #3B82F6; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s ease;
+            background: #FFFFFF !important; border: 1px solid #E5E7EB !important; border-radius: 12px !important; padding: 20px !important; 
+            border-top: 4px solid #2563EB !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; transition: transform 0.2s ease !important;
         }
-        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 3px solid #38BDF8; box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
-        [data-testid="stMetric"] label { color: #94A3B8 !important; font-weight: 500 !important; }
-        [data-testid="stMetric"] div[data-testid="stMetricValue"] { color: #F8FAFC !important; }
+        [data-testid="stMetric"]:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; }
+        [data-testid="stMetric"] label { color: #6B7280 !important; font-weight: 600 !important; }
+        [data-testid="stMetricValue"] div { color: #111827 !important; }
         
-        /* Dataframes Integrados */
-        [data-testid="stDataFrame"] { background-color: #0F172A; border-radius: 8px; padding: 10px; border: 1px solid #334155; }
+        /* Dataframes Integrados (Blancos) */
+        [data-testid="stDataFrame"] { background-color: #FFFFFF !important; border-radius: 8px !important; padding: 10px !important; border: 1px solid #E5E7EB !important; }
         
-        /* Alertas limpias */
-        [data-testid="stAlert"] { background-color: #0F172A !important; border: 1px solid #334155 !important; color: #F8FAFC !important; }
-        
-        /* Forzar color claro en textos base */
-        h1, h2, h3, h4, p, span, div { color: #F8FAFC; }
-        h1, h2, h3, h4 { font-weight: 700 !important; }
-        .stMarkdown p { color: #CBD5E1 !important; }
+        /* Textos Forzados a Oscuro para Modo Claro */
+        h1, h2, h3, h4, p, span, label, div { color: #111827; }
+        h1, h2, h3, h4 { font-weight: 700 !important; color: #0F172A !important; }
+        .stMarkdown p { color: #4B5563 !important; }
     </style>
 """, unsafe_allow_html=True)
 
 def render_logo():
     st.markdown("""
-        <div style='display: flex; align-items: center; justify-content: center; background: #0F172A; border-radius: 12px; border: 1px solid #334155; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);'>
-            <h1 style='color: #F8FAFC; font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; margin:0;'>🏢 ACTIVOS PRO</h1>
+        <div style='display: flex; align-items: center; justify-content: center; background: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);'>
+            <h1 style='color: #2563EB; font-size: 2rem; font-weight: 800; letter-spacing: 2px; margin:0;'>🏢 ACTIVOS PRO</h1>
         </div>
     """, unsafe_allow_html=True)
 
@@ -176,9 +177,10 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
     return periodos
 
 def get_color_estado(val):
-    if val in ['Vigente', 'Aplicado', 'Ocupado', 'Activo']: return 'background-color: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold;'
-    if val in ['Cancelado', 'Finalizado', 'Anulado', 'Inactivo']: return 'background-color: rgba(239, 68, 68, 0.15); color: #EF4444; font-weight: bold;'
-    if val in ['Disponible']: return 'background-color: rgba(56, 189, 248, 0.15); color: #38BDF8; font-weight: bold;'
+    # Colores optimizados para fondos blancos (Modo Claro)
+    if val in ['Vigente', 'Aplicado', 'Ocupado', 'Activo']: return 'background-color: #D1FAE5; color: #065F46; font-weight: bold;'
+    if val in ['Cancelado', 'Finalizado', 'Anulado', 'Inactivo']: return 'background-color: #FEE2E2; color: #991B1B; font-weight: bold;'
+    if val in ['Disponible']: return 'background-color: #DBEAFE; color: #1E40AF; font-weight: bold;'
     return ''
 
 # ==========================================
@@ -299,14 +301,14 @@ if mod == "dash":
     with t2:
         ca, cb = st.columns(2)
         with ca:
-            st.markdown("<h4 style='color:#38BDF8;'>Disponibles (Listas para rentar)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#2563EB;'>Disponibles (Listas para rentar)</h4>", unsafe_allow_html=True)
             df_l = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad, u.canon_base as 'Canon Base' FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
             if not df_l.empty:
                 df_l['Canon Base'] = df_l['Canon Base'].apply(fmt_cop)
                 st.dataframe(df_l, use_container_width=True, hide_index=True)
             else: st.info("Inventario ocupado al 100%.")
         with cb:
-            st.markdown("<h4 style='color:#94A3B8;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#6B7280;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
             df_inact = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.activo = FALSE OR p.activo = FALSE")
             if not df_inact.empty: st.dataframe(df_inact, use_container_width=True, hide_index=True)
             else: st.info("Todos los complejos inmobiliarios están activos.")
@@ -376,7 +378,7 @@ elif mod == "activos":
                 df_all_u = run_query("SELECT id, nombre_unidad, activo FROM ap_unidades")
                 if not df_all_u.empty:
                     sel_tog_u = st.selectbox("Seleccionar Unidad", [f"[{'Activa' if r['activo'] else 'Inactiva'}] {r['nombre_unidad']}" for _, r in df_all_u.iterrows()])
-                    if st.form_submit_button("Alternar Estado "):
+                    if st.form_submit_button("Alternar Estado"):
                         nom_u = sel_tog_u.split("] ")[1]
                         nuevo_estado = 0 if "Activa" in sel_tog_u else 1
                         run_transact("UPDATE ap_unidades SET activo = %s WHERE nombre_unidad = %s", (nuevo_estado, nom_u))
@@ -508,7 +510,7 @@ elif mod == "tesoreria":
         else: st.info("No hay pagos registrados.")
 
 # ----------------------------------------
-# SEGURIDAD IAM (Y DATA SEMILLA)
+# SEGURIDAD IAM & GENERADOR DATA SEMILLA
 # ----------------------------------------
 elif mod == "seguridad":
     st.markdown("<h2>Seguridad IAM ⚙️</h2>", unsafe_allow_html=True)
