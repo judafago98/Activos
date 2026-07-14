@@ -9,91 +9,96 @@ from dateutil.relativedelta import relativedelta
 # ==========================================
 # 1. CONFIGURACIÓN GLOBAL
 # ==========================================
-st.set_page_config(page_title="Activos", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
+st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS PREMIUM (MONOCROMÁTICO, NEÓN MORADO Y ZERO ROJOS)
+# 2. MOTOR CSS PREMIUM (SPACE GRAY & ELECTRIC BLUE)
 # ==========================================
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 
-        /* Fondo Dark Premium */
-        .stApp { background-color: #050505 !important; color: #FAFAFA !important; }
+        /* Fondo Gris Espacial Suave */
+        .stApp { background-color: #1E293B !important; color: #F8FAFC !important; }
         #MainMenu, footer, header, [data-testid="stHeader"] {display: none !important;}
         
         ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-thumb { background: #222222; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #8B5CF6; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00D4FF; }
 
-        /* 🛡️ EXTERMINIO DE BORDES ROJOS NATIVOS */
         *:focus { outline: none !important; box-shadow: none !important; }
         
+        /* INPUTS Y SELECTS: FOCUS AZUL ELÉCTRICO */
         div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"], .stDateInput > div {
-            background-color: #111111 !important;
-            border: 1px solid #222222 !important;
-            border-radius: 8px !important;
-            color: white !important;
+            background-color: #0F172A !important; border: 1px solid #334155 !important;
+            border-radius: 8px !important; color: white !important;
         }
         div[data-baseweb="input"]:focus-within, div[data-baseweb="select"]:focus-within, .stDateInput > div:focus-within {
-            border-color: #8B5CF6 !important;
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4) !important;
-            background-color: #161616 !important;
+            border-color: #00D4FF !important; box-shadow: 0 0 10px rgba(0, 212, 255, 0.4) !important; background-color: #1E293B !important;
         }
         input, select, textarea { color: white !important; background: transparent !important; outline: none !important; }
 
-        /* PESTAÑAS (TABS) - MORADO / CERO ROJO */
-        div[data-testid="stTabs"] button[role="tab"] { color: #A1A1AA !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; }
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; border-bottom-color: #8B5CF6 !important; }
-        div[data-baseweb="tab-highlight"] { background-color: #8B5CF6 !important; display: none !important;}
+        /* PESTAÑAS (TABS) - AZUL / CERO ROJO */
+        div[data-testid="stTabs"] button[role="tab"] { color: #94A3B8 !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; }
+        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #FFFFFF !important; border-bottom-color: #00D4FF !important; }
+        div[data-baseweb="tab-highlight"] { background-color: #00D4FF !important; display: none !important;}
 
-        /* Formularios Modernos */
+        /* Formularios Modernos (Gris Profundo) */
         [data-testid="stForm"] {
-            background: #0A0A0A !important;
-            border: 1px solid #222222 !important;
-            border-radius: 12px !important;
-            padding: 30px !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
+            background: #0F172A !important; border: 1px solid #1E293B !important;
+            border-radius: 12px !important; padding: 30px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
         }
 
-        /* 🟣 BOTONES ESTÁNDAR (Gradiente Morado) */
+        /* Botones Normales (Gradiente Azul) */
         button[kind="secondary"] {
-            background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%) !important;
+            background: linear-gradient(135deg, #2563EB 0%, #00D4FF 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 6px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
         }
         button[kind="secondary"]:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.6) !important;
-            background: linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%) !important;
+            transform: translateY(-2px) !important; box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4) !important;
+            background: linear-gradient(135deg, #1D4ED8 0%, #06B6D4 100%) !important;
         }
 
-        /* 🔴 BOTONES DE DESTRUCCIÓN CRÍTICA */
+        /* Botones Destrucción (Rojos - Por Seguridad) */
         button[kind="primary"] {
             background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 6px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
         }
-        button[kind="primary"]:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.6) !important;
-        }
+        button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 5px 20px rgba(239, 68, 68, 0.6) !important; }
 
-        /* Ocultamiento preventivo de la barra lateral nativa en móviles si se desea */
-        [data-testid="stSidebar"] { background-color: #09090B !important; border-right: 1px solid #1F1F22 !important; }
+        /* Toggles (Interruptores) */
+        [data-testid="stToggle"] [data-baseweb="checkbox"] > div { background-color: #334155 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+        [data-testid="stToggle"] [data-baseweb="checkbox"] div[data-checked="true"] { background-color: #00D4FF !important; border-color: #00D4FF !important; box-shadow: 0 0 10px rgba(0, 212, 255, 0.5) !important; }
+
+        /* SIDEBAR (Sin puntos rojos) */
+        [data-testid="stSidebar"] { background-color: #0F172A !important; border-right: 1px solid #1E293B !important; }
+        div[role="radiogroup"] label div[data-baseweb="radio"], div[role="radiogroup"] label > div:first-child { display: none !important; }
+        
+        div[role="radiogroup"] label {
+            background: transparent !important; border-radius: 6px !important;
+            padding: 12px 15px !important; margin: 4px 8px !important; transition: all 0.2s ease !important; cursor: pointer !important;
+        }
+        div[role="radiogroup"] label p { color: #94A3B8 !important; font-weight: 500 !important; margin: 0 !important; }
+        div[role="radiogroup"] label[data-checked="true"] {
+            background: rgba(0, 212, 255, 0.1) !important; border-left: 4px solid #00D4FF !important;
+        }
+        div[role="radiogroup"] label[data-checked="true"] p { color: #FFFFFF !important; font-weight: 700 !important;}
 
         /* Tarjetas de Métricas */
         [data-testid="stMetric"] { 
-            background: #111111; border: 1px solid #222222; border-radius: 12px; padding: 20px; 
-            border-top: 2px solid #8B5CF6; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s ease;
+            background: #0F172A; border: 1px solid #334155; border-radius: 12px; padding: 20px; 
+            border-top: 2px solid #2563EB; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s ease;
         }
-        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 2px solid #10B981; }
+        [data-testid="stMetric"]:hover { transform: translateY(-3px); border-top: 2px solid #00D4FF; }
         
-        [data-testid="stDataFrame"] { background-color: #0A0A0A; border-radius: 8px; padding: 10px; border: 1px solid #222222; }
-        [data-testid="stAlert"] { background-color: #111111 !important; border: 1px solid #222222 !important; color: #FFFFFF !important; }
+        /* Dataframes */
+        [data-testid="stDataFrame"] { background-color: #0F172A; border-radius: 8px; padding: 10px; border: 1px solid #334155; }
+        [data-testid="stAlert"] { background-color: #0F172A !important; border: 1px solid #334155 !important; color: #FFFFFF !important; }
         
         h1, h2, h3, h4 { color: #FFFFFF !important; font-weight: 700 !important; }
     </style>
@@ -101,7 +106,7 @@ st.markdown("""
 
 def render_logo():
     st.markdown("""
-        <div style='display: flex; align-items: center; justify-content: center; background: #111111; border-radius: 12px; border: 1px solid #222222; padding: 15px; margin-bottom: 20px;'>
+        <div style='display: flex; align-items: center; justify-content: center; background: #0F172A; border-radius: 12px; border: 1px solid #334155; padding: 15px; margin-bottom: 20px;'>
             <h1 style='color: #FFFFFF; font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; margin:0;'>🏢 ACTIVOS PRO</h1>
         </div>
     """, unsafe_allow_html=True)
@@ -179,7 +184,7 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
 def get_color_estado(val):
     if val in ['Vigente', 'Aplicado', 'Ocupado', 'Activo']: return 'background-color: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold;'
     if val in ['Cancelado', 'Finalizado', 'Anulado', 'Inactivo']: return 'background-color: rgba(239, 68, 68, 0.15); color: #EF4444; font-weight: bold;'
-    if val in ['Disponible']: return 'background-color: rgba(139, 92, 246, 0.2); color: #8B5CF6; font-weight: bold;'
+    if val in ['Disponible']: return 'background-color: rgba(0, 212, 255, 0.15); color: #00D4FF; font-weight: bold;'
     return ''
 
 # ==========================================
@@ -205,11 +210,10 @@ if not st.session_state['logeado']:
     st.stop()
 
 # ==========================================
-# 6. ENRUTADOR SUPREMO (BARRA SUPERIOR PERFECTA PARA MÓVIL)
+# 6. ENRUTADOR SUPREMO (NAVBAR SUPERIOR PARA MÓVIL)
 # ==========================================
 render_logo()
 
-# Definición del diccionario de módulos del ecosistema
 menu = {
     "📊 Panel General": "dash", 
     "🏢 Inmuebles y Activos": "activos", 
@@ -219,7 +223,6 @@ menu = {
 if st.session_state['rol'] == 'Administrador': 
     menu["⚙️ Seguridad e Inyección IAM"] = "seguridad"
 
-# El selector horizontal maestro (Navbar Superior)
 c_nav, c_out = st.columns([5, 1])
 with c_nav:
     nav_seleccionada = st.selectbox("MÓDULO DE OPERACIÓN", list(menu.keys()), label_visibility="collapsed")
@@ -235,7 +238,7 @@ st.divider()
 # ==========================================
 
 # ----------------------------------------
-# PANEL GENERAL (DASHBOARD + RADAR DE COBROS)
+# PANEL GENERAL
 # ----------------------------------------
 if mod == "dash":
     st.markdown("<h3>Mando Gerencial 📊</h3>", unsafe_allow_html=True)
@@ -244,7 +247,6 @@ if mod == "dash":
     t_ing = run_query("SELECT SUM(monto_pagado) as t FROM ap_pagos WHERE estado_pago = 'Aplicado'")
     df_libres = run_query("SELECT COUNT(*) as t FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
     
-    # MOTOR DE LIQUIDACIÓN Y ESCANEO DE COBROS (MORA REAL)
     df_activos = run_query("SELECT c.id, c.fecha_inicio, c.fecha_fin, c.dia_pago_mensual, c.canon_pactado, u.nombre_unidad, p.nombre as prop, i.nombre_completo FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_propiedades p ON u.propiedad_id = p.id JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE c.estado_contrato = 'Vigente'")
     df_pagos_totales = run_query("SELECT contrato_id, periodo_pagado, SUM(monto_pagado) as total_pagado FROM ap_pagos GROUP BY contrato_id, periodo_pagado")
     
@@ -303,14 +305,14 @@ if mod == "dash":
     with t2:
         ca, cb = st.columns(2)
         with ca:
-            st.markdown("<h4 style='color:#8B5CF6;'>Disponibles (Listas para rentar)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#00D4FF;'>Disponibles (Listas para rentar)</h4>", unsafe_allow_html=True)
             df_l = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad, u.canon_base as 'Canon Base' FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
             if not df_l.empty:
                 df_l['Canon Base'] = df_l['Canon Base'].apply(fmt_cop)
                 st.dataframe(df_l, use_container_width=True, hide_index=True)
             else: st.info("Inventario ocupado al 100%.")
         with cb:
-            st.markdown("<h4 style='color:#A1A1AA;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#94A3B8;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
             df_inact = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.activo = FALSE OR p.activo = FALSE")
             if not df_inact.empty: st.dataframe(df_inact, use_container_width=True, hide_index=True)
             else: st.info("Todos los complejos inmobiliarios están activos.")
@@ -441,7 +443,6 @@ elif mod == "contratos":
                 opc_kill = {f"[{r['id']}] {r['prop']} - {r['nombre_unidad']} | {r['nombre_completo']}": (r['id'], r['unidad_id']) for _, r in df_activos.iterrows()}
                 sel_kill = st.selectbox("Seleccionar contrato a terminar:", list(opc_kill.keys()))
                 f_real = st.date_input("Fecha real de entrega del inmueble:")
-                # 🔴 BOTÓN ROJO EXCLUSIVO PARA DESTRUCCIÓN
                 if st.form_submit_button("🛑 Ejecutar Terminación Definitiva", type="primary"):
                     id_con, id_uni = opc_kill[sel_kill]
                     str_f_real = f_real.strftime('%Y-%m-%d')
@@ -450,7 +451,7 @@ elif mod == "contratos":
                         st.toast("Contrato cerrado."); time.sleep(1.5); st.rerun()
 
 # ----------------------------------------
-# TESORERÍA (AUTO-COBRO POR SALDOS RESTANTES)
+# TESORERÍA
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería 💰</h2>", unsafe_allow_html=True)
@@ -468,7 +469,6 @@ elif mod == "tesoreria":
                 dat_con = opc_c[sel_c]
                 canon_base = float(dat_con['canon_pactado'])
                 
-                # Descontar lo pagado para ocultar periodos saldados o permitir abonos
                 df_pagos_contrato = run_query("SELECT periodo_pagado, SUM(monto_pagado) as total_pagado FROM ap_pagos WHERE contrato_id = %s GROUP BY periodo_pagado", (int(dat_con['id']),))
                 pagos_map = {row['periodo_pagado']: float(row['total_pagado']) for _, row in df_pagos_contrato.iterrows()} if not df_pagos_contrato.empty else {}
                 
@@ -503,20 +503,18 @@ elif mod == "tesoreria":
                     st.dataframe(df_hist, use_container_width=True, hide_index=True)
 
     with t2:
-        st.markdown("#### Anular Transacción del Sistema")
         df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
         if not df_pagos_del.empty:
             with st.form("f_del_pago"):
                 opc_p = {f"[{str(r['fecha_registro'])[:10]}] {r['nombre_unidad']} - {r['nombre_completo']} | {r['periodo_pagado']} | {fmt_cop(r['monto_pagado'])}": r['id'] for _, r in df_pagos_del.iterrows()}
                 sel_p = st.selectbox("Seleccionar Pago a Revertir", list(opc_p.keys()))
-                # 🔴 BOTÓN ROJO EXCLUSIVO PARA ELIMINACIÓN
                 if st.form_submit_button("🗑️ Eliminar Pago de Base de Datos", type="primary"):
                     if run_transact("DELETE FROM ap_pagos WHERE id = %s", (int(opc_p[sel_p]),)):
                         st.toast("Pago eliminado."); time.sleep(1); st.rerun()
         else: st.info("No hay pagos registrados.")
 
 # ----------------------------------------
-# SEGURIDAD IAM & GENERADOR DATA SEMILLA (BOTÓN DIOS)
+# SEGURIDAD IAM & GENERADOR DATA SEMILLA
 # ----------------------------------------
 elif mod == "seguridad":
     st.markdown("<h2>Seguridad IAM ⚙️</h2>", unsafe_allow_html=True)
@@ -560,7 +558,6 @@ elif mod == "seguridad":
                 hoy = datetime.date.today()
                 
                 for idx, row in unidades_id.iterrows():
-                    # Hace 2 meses para que el algoritmo detecte deudas anteriores
                     f_ini = (hoy - relativedelta(months=2)).strftime('%Y-%m-%d')
                     f_fin = (hoy + relativedelta(months=10)).strftime('%Y-%m-%d')
                     uid = int(row['id'])
@@ -570,7 +567,6 @@ elif mod == "seguridad":
                     run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (uid, cid, canon, 5, f_ini, f_fin))
                     run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (uid,))
                     
-                    # El primer cliente abona algo, los otros quedan en mora absoluta
                     con_id = run_query("SELECT id FROM ap_contratos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                     if idx == 0: 
                         per_pago = (hoy - relativedelta(months=2)).strftime('%Y-%m')
