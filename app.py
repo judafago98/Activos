@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import mysql.connector
@@ -12,95 +13,67 @@ from dateutil.relativedelta import relativedelta
 st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS: MODO CLARO Y BLINDAJE CONTRA MODO OSCURO DEL NAVEGADOR
+# 2. INYECCIÓN NUCLEAR DE TEMA (FORZAR MODO CLARO Y ELIMINAR EL ROJO NATIVO)
+# ==========================================
+def inyectar_tema_nativo():
+    """Crea el config.toml para obligar a Streamlit a usar Modo Claro y color Azul"""
+    config_dir = ".streamlit"
+    config_path = f"{config_dir}/config.toml"
+    
+    tema_config = """
+[theme]
+base="light"
+primaryColor="#2563EB"
+backgroundColor="#F4F7F9"
+secondaryBackgroundColor="#FFFFFF"
+textColor="#0F172A"
+font="sans serif"
+"""
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+        
+    necesita_reinicio = False
+    if not os.path.exists(config_path):
+        with open(config_path, "w") as f:
+            f.write(tema_config)
+        necesita_reinicio = True
+    else:
+        with open(config_path, "r") as f:
+            if 'primaryColor="#2563EB"' not in f.read():
+                with open(config_path, "w") as fw:
+                    fw.write(tema_config)
+                necesita_reinicio = True
+                
+    if necesita_reinicio:
+        st.rerun()
+
+inyectar_tema_nativo()
+
+# ==========================================
+# 3. CSS MÍNIMO (SÓLO PARA TARJETAS Y BOTONES DE PELIGRO)
 # ==========================================
 st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
         html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
-
-        /* Fondo de la App */
-        .stApp { background-color: #F4F7F9 !important; color: #0F172A !important; }
+        
         #MainMenu, footer, header, [data-testid="stHeader"] {display: none !important;}
         
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2563EB; }
-
-        *:focus { outline: none !important; box-shadow: none !important; }
-        
-        /* INPUTS BLANCOS GARANTIZADOS */
-        div[data-baseweb="input"] > div, div[data-baseweb="select"] > div, textarea, .stDateInput > div > div {
-            background-color: #FFFFFF !important; 
-            border: 1px solid #CBD5E1 !important;
-            border-radius: 8px !important; 
-            color: #0F172A !important;
-        }
-        div[data-baseweb="input"] > div:focus-within, div[data-baseweb="select"] > div:focus-within, .stDateInput > div > div:focus-within {
-            border-color: #2563EB !important; 
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important; 
-            background-color: #FFFFFF !important;
-        }
-        input, select, textarea { color: #0F172A !important; background: transparent !important; outline: none !important; }
-
-        /* 🔪 EXTERMINIO DE LA LÍNEA ROJA EN LAS PESTAÑAS (TABS) */
-        div[data-testid="stTabs"] button[role="tab"] { 
-            color: #64748B !important; font-weight: 600 !important; border-bottom: 3px solid transparent !important; background: transparent !important;
-        }
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { 
-            color: #2563EB !important; border-bottom: 3px solid #2563EB !important; background: transparent !important;
-        }
-        div[data-testid="stTabs"] div[data-baseweb="tab-highlight"] { display: none !important; background-color: transparent !important; }
-
-        /* NAVBAR HORIZONTAL PERSONALIZADO (Reemplaza el selectbox negro) */
-        div.row-widget.stRadio > div { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; background: #FFFFFF; padding: 15px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
-        div.row-widget.stRadio > div > label { background-color: #F1F5F9 !important; padding: 10px 20px !important; border-radius: 8px !important; cursor: pointer !important; border: 1px solid transparent !important; }
-        div.row-widget.stRadio > div > label:hover { background-color: #E2E8F0 !important; }
-        div.row-widget.stRadio > div > label[data-checked="true"] { background-color: #EFF6FF !important; border: 1px solid #BFDBFE !important; }
-        div.row-widget.stRadio > div > label p { color: #475569 !important; font-weight: 600 !important; margin: 0 !important; }
-        div.row-widget.stRadio > div > label[data-checked="true"] p { color: #1D4ED8 !important; font-weight: 800 !important; }
-        div.row-widget.stRadio > div > label div[data-baseweb="radio"] { display: none !important; } /* Oculta el círculo nativo */
-
-        /* Formularios */
-        [data-testid="stForm"] {
-            background: #FFFFFF !important; border: 1px solid #E2E8F0 !important;
-            border-radius: 12px !important; padding: 30px !important; 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
-        }
-
-        /* Botones Normales (Azul Corporativo) */
-        button[kind="secondary"] {
-            background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%) !important;
-            color: #FFFFFF !important; border: none !important; border-radius: 8px !important;
-            font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
-            padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
-        }
-        button[kind="secondary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3) !important; }
-
-        /* Botones Destrucción (Rojos) */
+        /* Botones de Destrucción (Rojos) */
         button[kind="primary"] {
             background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 8px !important;
-            font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
-            padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
+            font-weight: 700 !important; text-transform: uppercase !important;
+            transition: all 0.2s ease !important;
         }
-        button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3) !important; }
+        button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important; }
 
-        /* Tarjetas de Métricas */
+        /* Tarjetas de Métricas (Dashboard) */
         [data-testid="stMetric"] { 
             background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; border-radius: 12px !important; padding: 20px !important; 
-            border-top: 4px solid #2563EB !important; box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important; transition: transform 0.2s ease !important;
+            border-top: 4px solid #2563EB !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; transition: transform 0.2s ease !important;
         }
         [data-testid="stMetric"]:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; border-top: 4px solid #06B6D4 !important;}
-        [data-testid="stMetric"] label { color: #64748B !important; font-weight: 600 !important; }
-        [data-testid="stMetricValue"] div { color: #0F172A !important; }
-        
-        /* Contenedor Dataframe */
-        [data-testid="stDataFrame"] { background-color: #FFFFFF !important; border-radius: 8px !important; padding: 10px !important; border: 1px solid #E2E8F0 !important; }
-        [data-testid="stAlert"] { background-color: #F8FAFC !important; border: 1px solid #CBD5E1 !important; color: #0F172A !important; }
-        
-        h1, h2, h3, h4, p, span, label, div { color: #0F172A; }
-        h1, h2, h3, h4 { font-weight: 700 !important; color: #1E293B !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -115,18 +88,8 @@ def render_logo():
         </div>
     """.format(user=st.session_state.get('nombre_usuario', ''), rol=st.session_state.get('rol', '').upper()), unsafe_allow_html=True)
 
-# Función para forzar tablas a Blanco/Azul ignorando el modo oscuro
-def estilizar_df(df):
-    if df.empty: return df
-    return df.style.set_properties(**{
-        'background-color': '#FFFFFF',
-        'color': '#0F172A',
-        'border-color': '#E2E8F0',
-        'font-family': 'Outfit'
-    })
-
 # ==========================================
-# 3. BASE DE DATOS Y AUTO-HEALING
+# 4. BASE DE DATOS Y AUTO-HEALING
 # ==========================================
 @st.cache_resource
 def get_pool():
@@ -180,7 +143,7 @@ def inicializar_bd():
 inicializar_bd()
 
 # ==========================================
-# 4. UTILS FINANCIEROS Y DE CARTERA
+# 5. UTILS FINANCIEROS Y DE CARTERA
 # ==========================================
 def fmt_cop(val):
     try: return f"${int(float(val)):,}".replace(',', '.')
@@ -196,7 +159,7 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
     return periodos
 
 # ==========================================
-# 5. CONTROL DE ACCESO
+# 6. CONTROL DE ACCESO
 # ==========================================
 if 'logeado' not in st.session_state: st.session_state.update({'logeado': False, 'rol': None, 'nombre_usuario': None})
 
@@ -222,7 +185,7 @@ if not st.session_state['logeado']:
     st.stop()
 
 # ==========================================
-# 6. ENRUTADOR SUPREMO (NUEVO NAVBAR HORIZONTAL)
+# 7. ENRUTADOR SUPREMO (NAVBAR NATIVO)
 # ==========================================
 render_logo()
 
@@ -236,13 +199,14 @@ if st.session_state['rol'] == 'Administrador':
     menu_dict["⚙️ Seguridad e Inyección IAM"] = "seguridad"
 
 opciones_menu = list(menu_dict.keys())
+# Selector nativo que respetará el tema claro forzado
 nav_seleccionada = st.radio("Navegación", opciones_menu, horizontal=True, label_visibility="collapsed")
 mod = menu_dict[nav_seleccionada]
 
 st.divider()
 
 # ==========================================
-# 7. MÓDULOS OPERATIVOS
+# 8. MÓDULOS OPERATIVOS
 # ==========================================
 
 # ----------------------------------------
@@ -307,22 +271,22 @@ if mod == "dash":
         if mora_list:
             df_mora = pd.DataFrame(mora_list)
             df_mora['Saldo en Mora'] = df_mora['Saldo en Mora'].apply(fmt_cop)
-            st.dataframe(estilizar_df(df_mora), use_container_width=True, hide_index=True)
+            st.dataframe(df_mora, use_container_width=True, hide_index=True)
         else: st.success("🎉 Libro de cobros limpio. No hay deudores en mora.")
             
     with t2:
         ca, cb = st.columns(2)
         with ca:
-            st.markdown("<h4 style='color:#2563EB;'>Disponibles (Listas para rentar)</h4>", unsafe_allow_html=True)
+            st.markdown("#### Disponibles (Listas para rentar)")
             df_l = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad, u.canon_base as 'Canon Base' FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
             if not df_l.empty:
                 df_l['Canon Base'] = df_l['Canon Base'].apply(fmt_cop)
-                st.dataframe(estilizar_df(df_l), use_container_width=True, hide_index=True)
+                st.dataframe(df_l, use_container_width=True, hide_index=True)
             else: st.info("Inventario ocupado al 100%.")
         with cb:
-            st.markdown("<h4 style='color:#64748B;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
+            st.markdown("#### Inactivos / Fuera de Servicio")
             df_inact = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.activo = FALSE OR p.activo = FALSE")
-            if not df_inact.empty: st.dataframe(estilizar_df(df_inact), use_container_width=True, hide_index=True)
+            if not df_inact.empty: st.dataframe(df_inact, use_container_width=True, hide_index=True)
             else: st.info("Todos los complejos inmobiliarios están activos.")
 
     with t3:
@@ -330,7 +294,7 @@ if mod == "dash":
         df_p = run_query("SELECT p.fecha_registro as Fecha, IFNULL(u.nombre_unidad, 'Unidad Borrada') as Origen, p.periodo_pagado as 'Periodo Cubierto', p.monto_pagado as Ingreso FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
         if not df_p.empty:
             df_p['Ingreso'] = df_p['Ingreso'].apply(fmt_cop)
-            st.dataframe(estilizar_df(df_p), use_container_width=True, hide_index=True)
+            st.dataframe(df_p, use_container_width=True, hide_index=True)
         else: st.info("No hay transacciones registradas.")
 
 # ----------------------------------------
@@ -351,7 +315,7 @@ elif mod == "activos":
                         st.toast("Propiedad listada."); time.sleep(1); st.rerun()
         with c2:
             df_p = run_query("SELECT id as ID, nombre as Complejo, direccion as Dirección, IF(activo,'Activo','Inactivo') as Estado FROM ap_propiedades")
-            if not df_p.empty: st.dataframe(estilizar_df(df_p), use_container_width=True, hide_index=True)
+            if not df_p.empty: st.dataframe(df_p, use_container_width=True, hide_index=True)
 
     with t2:
         df_props = run_query("SELECT id, nombre FROM ap_propiedades WHERE activo = TRUE")
@@ -371,7 +335,7 @@ elif mod == "activos":
                 df_u = run_query("SELECT p.nombre as Complejo, u.nombre_unidad as Unidad, u.canon_base as 'Tarifa', IF(u.activo,'Activo','Inactivo') as Operatividad, u.estado_vacancia as Vacancia FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id ORDER BY u.id DESC")
                 if not df_u.empty:
                     df_u['Tarifa'] = df_u['Tarifa'].apply(fmt_cop)
-                    st.dataframe(estilizar_df(df_u), use_container_width=True, hide_index=True)
+                    st.dataframe(df_u, use_container_width=True, hide_index=True)
                     
     with t3:
         colA, colB = st.columns(2)
@@ -415,7 +379,7 @@ elif mod == "contratos":
                         st.toast("Cliente en red."); time.sleep(1); st.rerun()
         with c2:
             df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM ap_inquilinos")
-            if not df_i.empty: st.dataframe(estilizar_df(df_i), use_container_width=True, hide_index=True)
+            if not df_i.empty: st.dataframe(df_i, use_container_width=True, hide_index=True)
 
     with t2:
         df_i = run_query("SELECT id, nombre_completo, documento_identidad FROM ap_inquilinos")
@@ -508,7 +472,7 @@ elif mod == "tesoreria":
                 df_hist = run_query("SELECT p.fecha_registro as Timestamp, IFNULL(u.nombre_unidad, 'Borrado') as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
                 if not df_hist.empty:
                     df_hist['Volumen'] = df_hist['Volumen'].apply(fmt_cop)
-                    st.dataframe(estilizar_df(df_hist), use_container_width=True, hide_index=True)
+                    st.dataframe(df_hist, use_container_width=True, hide_index=True)
 
     with t2:
         df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
@@ -541,32 +505,28 @@ elif mod == "seguridad":
                         st.toast("Usuario guardado."); time.sleep(1); st.rerun()
         with c2:
             df_u = run_query("SELECT username as Alias, nombre_completo as Nombre, rol as Privilegios, IF(activo, 'Activo', 'Inactivo') as Estado FROM ap_usuarios")
-            if not df_u.empty: st.dataframe(estilizar_df(df_u), use_container_width=True, hide_index=True)
+            if not df_u.empty: st.dataframe(df_u, use_container_width=True, hide_index=True)
             
     with t2:
         st.markdown("#### Generador Masivo de Infraestructura y Clientes")
         st.write("Este comando inyectará de golpe 5 Torres comerciales, 20 Suites de apartamentos e inquilinos corporativos con historial financiero cruzado.")
         if st.button("🚀 INYECTAR 5 EDIFICIOS Y CONTRATOS (DEMO)"):
             with st.spinner("Minando infraestructura de prueba..."):
-                # 1. Inyectar Propiedades y Unidades
                 for i in range(1, 6):
                     run_transact("INSERT INTO ap_propiedades (nombre, direccion) VALUES (%s, %s)", (f"Torre Omega {i}", f"Distrito Financiero #{i}"))
                     pid = run_query("SELECT id FROM ap_propiedades ORDER BY id DESC LIMIT 1").iloc[0]['id']
                     for j in range(1, 5):
                         run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (int(pid), f"Apto {j}01", float(700000 + (j*100000))))
                 
-                # 2. Inyectar Inquilinos
                 nombres = ["Bruce Wayne", "Tony Stark", "Lex Luthor", "Oliver Queen", "Norman Osborn"]
                 for i, nom in enumerate(nombres):
                     run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (f"NIT-9004{i}", nom, f"+57 300 440{i}"))
                 
-                # 3. Firmar Contratos con desfase temporal para provocar alarmas de Mora
                 clientes_id = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 5")['id'].tolist()
                 unidades_id = run_query("SELECT id, canon_base FROM ap_unidades WHERE estado_vacancia='Disponible' LIMIT 5")
                 hoy = datetime.date.today()
                 
                 for idx, row in unidades_id.iterrows():
-                    # Hace 2 meses para que el algoritmo detecte deudas anteriores
                     f_ini = (hoy - relativedelta(months=2)).strftime('%Y-%m-%d')
                     f_fin = (hoy + relativedelta(months=10)).strftime('%Y-%m-%d')
                     uid = int(row['id'])
@@ -576,7 +536,6 @@ elif mod == "seguridad":
                     run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (uid, cid, canon, 5, f_ini, f_fin))
                     run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (uid,))
                     
-                    # El primer cliente abona algo, los otros quedan en mora absoluta
                     con_id = run_query("SELECT id FROM ap_contratos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                     if idx == 0: 
                         per_pago = (hoy - relativedelta(months=2)).strftime('%Y-%m')
@@ -586,6 +545,4 @@ elif mod == "seguridad":
                 time.sleep(1.5)
                 st.rerun()
 
-# Para salir del programa limpiamente si se pulsa el botón en el top navbar
-if st.session_state.get('logeado') == False:
-    st.stop()
+st.markdown("<br><br><div style='text-align: center;'><button class='stButton' style='width:auto;' kind='primary' onclick='window.location.reload();'>🔄 Refrescar Pantalla</button></div>", unsafe_allow_html=True)
