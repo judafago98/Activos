@@ -12,15 +12,15 @@ from dateutil.relativedelta import relativedelta
 st.set_page_config(page_title="Activos Pro", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
 # ==========================================
-# 2. MOTOR CSS: MODO CLARO Y LUMINOSO (LIGHT MODE)
+# 2. MOTOR CSS: MODO CLARO Y BLINDAJE CONTRA MODO OSCURO DEL NAVEGADOR
 # ==========================================
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 
-        /* Fondo 100% Claro (Gris perla muy suave) */
-        .stApp { background-color: #F4F7F9 !important; color: #111827 !important; }
+        /* Fondo de la App */
+        .stApp { background-color: #F4F7F9 !important; color: #0F172A !important; }
         #MainMenu, footer, header, [data-testid="stHeader"] {display: none !important;}
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -29,82 +29,101 @@ st.markdown("""
 
         *:focus { outline: none !important; box-shadow: none !important; }
         
-        /* INPUTS Y SELECTS: BLANCOS CON TEXTO NEGRO Y BORDE AZUL AL TOCAR */
+        /* INPUTS BLANCOS GARANTIZADOS */
         div[data-baseweb="input"] > div, div[data-baseweb="select"] > div, textarea, .stDateInput > div > div {
             background-color: #FFFFFF !important; 
-            border: 1px solid #D1D5DB !important;
+            border: 1px solid #CBD5E1 !important;
             border-radius: 8px !important; 
-            color: #111827 !important;
+            color: #0F172A !important;
         }
         div[data-baseweb="input"] > div:focus-within, div[data-baseweb="select"] > div:focus-within, .stDateInput > div > div:focus-within {
             border-color: #2563EB !important; 
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important; 
             background-color: #FFFFFF !important;
         }
-        input, select, textarea { color: #111827 !important; background: transparent !important; outline: none !important; }
-        div[data-baseweb="select"] span { color: #111827 !important; }
-        li[role="option"] { color: #111827 !important; }
+        input, select, textarea { color: #0F172A !important; background: transparent !important; outline: none !important; }
 
-        /* PESTAÑAS (TABS) - AZULES Y LIMPIAS */
-        div[data-testid="stTabs"] button[role="tab"] { color: #6B7280 !important; font-weight: 600 !important; border-bottom: 2px solid transparent !important; background: transparent !important;}
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color: #2563EB !important; border-bottom-color: #2563EB !important; background: transparent !important;}
-        div[data-baseweb="tab-highlight"] { display: none !important;}
+        /* 🔪 EXTERMINIO DE LA LÍNEA ROJA EN LAS PESTAÑAS (TABS) */
+        div[data-testid="stTabs"] button[role="tab"] { 
+            color: #64748B !important; font-weight: 600 !important; border-bottom: 3px solid transparent !important; background: transparent !important;
+        }
+        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { 
+            color: #2563EB !important; border-bottom: 3px solid #2563EB !important; background: transparent !important;
+        }
+        div[data-testid="stTabs"] div[data-baseweb="tab-highlight"] { display: none !important; background-color: transparent !important; }
 
-        /* Formularios (Blancos con sombra suave) */
+        /* NAVBAR HORIZONTAL PERSONALIZADO (Reemplaza el selectbox negro) */
+        div.row-widget.stRadio > div { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; background: #FFFFFF; padding: 15px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
+        div.row-widget.stRadio > div > label { background-color: #F1F5F9 !important; padding: 10px 20px !important; border-radius: 8px !important; cursor: pointer !important; border: 1px solid transparent !important; }
+        div.row-widget.stRadio > div > label:hover { background-color: #E2E8F0 !important; }
+        div.row-widget.stRadio > div > label[data-checked="true"] { background-color: #EFF6FF !important; border: 1px solid #BFDBFE !important; }
+        div.row-widget.stRadio > div > label p { color: #475569 !important; font-weight: 600 !important; margin: 0 !important; }
+        div.row-widget.stRadio > div > label[data-checked="true"] p { color: #1D4ED8 !important; font-weight: 800 !important; }
+        div.row-widget.stRadio > div > label div[data-baseweb="radio"] { display: none !important; } /* Oculta el círculo nativo */
+
+        /* Formularios */
         [data-testid="stForm"] {
-            background: #FFFFFF !important; border: 1px solid #E5E7EB !important;
+            background: #FFFFFF !important; border: 1px solid #E2E8F0 !important;
             border-radius: 12px !important; padding: 30px !important; 
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
         }
 
-        /* Botones Normales (Azul Rey Sólido) */
+        /* Botones Normales (Azul Corporativo) */
         button[kind="secondary"] {
-            background: #2563EB !important;
+            background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 8px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2) !important;
         }
-        button[kind="secondary"]:hover {
-            transform: translateY(-2px) !important; background: #1D4ED8 !important;
-            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3) !important;
-        }
+        button[kind="secondary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3) !important; }
 
-        /* Botones de Destrucción (Rojo para anular) */
+        /* Botones Destrucción (Rojos) */
         button[kind="primary"] {
-            background: #EF4444 !important;
+            background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%) !important;
             color: #FFFFFF !important; border: none !important; border-radius: 8px !important;
             font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
             padding: 0.6rem 1.5rem !important; transition: all 0.2s ease !important; width: 100% !important;
-            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2) !important;
         }
-        button[kind="primary"]:hover { transform: translateY(-2px) !important; background: #DC2626 !important; box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3) !important; }
+        button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3) !important; }
 
-        /* Tarjetas de Métricas (Blancas) */
+        /* Tarjetas de Métricas */
         [data-testid="stMetric"] { 
-            background: #FFFFFF !important; border: 1px solid #E5E7EB !important; border-radius: 12px !important; padding: 20px !important; 
-            border-top: 4px solid #2563EB !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; transition: transform 0.2s ease !important;
+            background: #FFFFFF !important; border: 1px solid #E2E8F0 !important; border-radius: 12px !important; padding: 20px !important; 
+            border-top: 4px solid #2563EB !important; box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important; transition: transform 0.2s ease !important;
         }
-        [data-testid="stMetric"]:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; }
-        [data-testid="stMetric"] label { color: #6B7280 !important; font-weight: 600 !important; }
-        [data-testid="stMetricValue"] div { color: #111827 !important; }
+        [data-testid="stMetric"]:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; border-top: 4px solid #06B6D4 !important;}
+        [data-testid="stMetric"] label { color: #64748B !important; font-weight: 600 !important; }
+        [data-testid="stMetricValue"] div { color: #0F172A !important; }
         
-        /* Dataframes Integrados (Blancos) */
-        [data-testid="stDataFrame"] { background-color: #FFFFFF !important; border-radius: 8px !important; padding: 10px !important; border: 1px solid #E5E7EB !important; }
+        /* Contenedor Dataframe */
+        [data-testid="stDataFrame"] { background-color: #FFFFFF !important; border-radius: 8px !important; padding: 10px !important; border: 1px solid #E2E8F0 !important; }
+        [data-testid="stAlert"] { background-color: #F8FAFC !important; border: 1px solid #CBD5E1 !important; color: #0F172A !important; }
         
-        /* Textos Forzados a Oscuro para Modo Claro */
-        h1, h2, h3, h4, p, span, label, div { color: #111827; }
-        h1, h2, h3, h4 { font-weight: 700 !important; color: #0F172A !important; }
-        .stMarkdown p { color: #4B5563 !important; }
+        h1, h2, h3, h4, p, span, label, div { color: #0F172A; }
+        h1, h2, h3, h4 { font-weight: 700 !important; color: #1E293B !important; }
     </style>
 """, unsafe_allow_html=True)
 
 def render_logo():
     st.markdown("""
-        <div style='display: flex; align-items: center; justify-content: center; background: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);'>
-            <h1 style='color: #2563EB; font-size: 2rem; font-weight: 800; letter-spacing: 2px; margin:0;'>🏢 ACTIVOS PRO</h1>
+        <div style='display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; padding: 15px 25px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);'>
+            <h1 style='color: #2563EB; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; margin:0;'>🏢 ACTIVOS PRO</h1>
+            <div style='text-align: right;'>
+                <b style='color:#0F172A;'>{user}</b><br>
+                <span style='color:#2563EB; font-size:12px; font-weight:bold;'>{rol}</span>
+            </div>
         </div>
-    """, unsafe_allow_html=True)
+    """.format(user=st.session_state.get('nombre_usuario', ''), rol=st.session_state.get('rol', '').upper()), unsafe_allow_html=True)
+
+# Función para forzar tablas a Blanco/Azul ignorando el modo oscuro
+def estilizar_df(df):
+    if df.empty: return df
+    return df.style.set_properties(**{
+        'background-color': '#FFFFFF',
+        'color': '#0F172A',
+        'border-color': '#E2E8F0',
+        'font-family': 'Outfit'
+    })
 
 # ==========================================
 # 3. BASE DE DATOS Y AUTO-HEALING
@@ -176,13 +195,6 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
         actual += relativedelta(months=1)
     return periodos
 
-def get_color_estado(val):
-    # Colores optimizados para fondos blancos (Modo Claro)
-    if val in ['Vigente', 'Aplicado', 'Ocupado', 'Activo']: return 'background-color: #D1FAE5; color: #065F46; font-weight: bold;'
-    if val in ['Cancelado', 'Finalizado', 'Anulado', 'Inactivo']: return 'background-color: #FEE2E2; color: #991B1B; font-weight: bold;'
-    if val in ['Disponible']: return 'background-color: #DBEAFE; color: #1E40AF; font-weight: bold;'
-    return ''
-
 # ==========================================
 # 5. CONTROL DE ACCESO
 # ==========================================
@@ -192,7 +204,11 @@ if not st.session_state['logeado']:
     st.markdown("<div style='height: 10vh;'></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 1.2, 1])
     with c2:
-        render_logo()
+        st.markdown("""
+            <div style='text-align: center; margin-bottom: 20px;'>
+                <h1 style='color: #2563EB; font-size: 3rem; font-weight: 800;'>🏢 ACTIVOS PRO</h1>
+            </div>
+        """, unsafe_allow_html=True)
         with st.form("login_form"):
             u = st.text_input("👤 Credencial Operativa")
             p = st.text_input("🔒 Hash de Seguridad", type="password")
@@ -206,26 +222,22 @@ if not st.session_state['logeado']:
     st.stop()
 
 # ==========================================
-# 6. ENRUTADOR SUPREMO (NAVBAR SUPERIOR MÓVIL)
+# 6. ENRUTADOR SUPREMO (NUEVO NAVBAR HORIZONTAL)
 # ==========================================
 render_logo()
 
-menu = {
+menu_dict = {
     "📊 Panel General": "dash", 
     "🏢 Inmuebles y Activos": "activos", 
     "👥 Contratos": "contratos", 
     "💰 Tesorería": "tesoreria"
 }
 if st.session_state['rol'] == 'Administrador': 
-    menu["⚙️ Seguridad e Inyección IAM"] = "seguridad"
+    menu_dict["⚙️ Seguridad e Inyección IAM"] = "seguridad"
 
-c_nav, c_out = st.columns([5, 1])
-with c_nav:
-    nav_seleccionada = st.selectbox("MÓDULO DE OPERACIÓN", list(menu.keys()), label_visibility="collapsed")
-    mod = menu[nav_seleccionada]
-with c_out:
-    if st.button("🚪 SALIR"):
-        st.session_state['logeado'] = False; st.rerun()
+opciones_menu = list(menu_dict.keys())
+nav_seleccionada = st.radio("Navegación", opciones_menu, horizontal=True, label_visibility="collapsed")
+mod = menu_dict[nav_seleccionada]
 
 st.divider()
 
@@ -287,7 +299,7 @@ if mod == "dash":
     c3.metric("Cartera en Mora", fmt_cop(deuda_total))
     c4.metric("Unidades Disponibles", f"{df_libres.iloc[0]['t'] if not df_libres.empty else 0}")
     
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
     t1, t2, t3 = st.tabs(["🚨 Centro de Cobros (Mora)", "🏢 Estado del Inventario", "📈 Radar de Transacciones"])
     
     with t1:
@@ -295,7 +307,7 @@ if mod == "dash":
         if mora_list:
             df_mora = pd.DataFrame(mora_list)
             df_mora['Saldo en Mora'] = df_mora['Saldo en Mora'].apply(fmt_cop)
-            st.dataframe(df_mora, use_container_width=True, hide_index=True)
+            st.dataframe(estilizar_df(df_mora), use_container_width=True, hide_index=True)
         else: st.success("🎉 Libro de cobros limpio. No hay deudores en mora.")
             
     with t2:
@@ -305,12 +317,12 @@ if mod == "dash":
             df_l = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad, u.canon_base as 'Canon Base' FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
             if not df_l.empty:
                 df_l['Canon Base'] = df_l['Canon Base'].apply(fmt_cop)
-                st.dataframe(df_l, use_container_width=True, hide_index=True)
+                st.dataframe(estilizar_df(df_l), use_container_width=True, hide_index=True)
             else: st.info("Inventario ocupado al 100%.")
         with cb:
-            st.markdown("<h4 style='color:#6B7280;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#64748B;'>Inactivos / Fuera de Servicio</h4>", unsafe_allow_html=True)
             df_inact = run_query("SELECT p.nombre as Estructura, u.nombre_unidad as Unidad FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.activo = FALSE OR p.activo = FALSE")
-            if not df_inact.empty: st.dataframe(df_inact, use_container_width=True, hide_index=True)
+            if not df_inact.empty: st.dataframe(estilizar_df(df_inact), use_container_width=True, hide_index=True)
             else: st.info("Todos los complejos inmobiliarios están activos.")
 
     with t3:
@@ -318,7 +330,7 @@ if mod == "dash":
         df_p = run_query("SELECT p.fecha_registro as Fecha, IFNULL(u.nombre_unidad, 'Unidad Borrada') as Origen, p.periodo_pagado as 'Periodo Cubierto', p.monto_pagado as Ingreso FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
         if not df_p.empty:
             df_p['Ingreso'] = df_p['Ingreso'].apply(fmt_cop)
-            st.dataframe(df_p, use_container_width=True, hide_index=True)
+            st.dataframe(estilizar_df(df_p), use_container_width=True, hide_index=True)
         else: st.info("No hay transacciones registradas.")
 
 # ----------------------------------------
@@ -339,7 +351,7 @@ elif mod == "activos":
                         st.toast("Propiedad listada."); time.sleep(1); st.rerun()
         with c2:
             df_p = run_query("SELECT id as ID, nombre as Complejo, direccion as Dirección, IF(activo,'Activo','Inactivo') as Estado FROM ap_propiedades")
-            if not df_p.empty: st.dataframe(df_p.style.map(get_color_estado, subset=['Estado']), use_container_width=True, hide_index=True)
+            if not df_p.empty: st.dataframe(estilizar_df(df_p), use_container_width=True, hide_index=True)
 
     with t2:
         df_props = run_query("SELECT id, nombre FROM ap_propiedades WHERE activo = TRUE")
@@ -359,7 +371,7 @@ elif mod == "activos":
                 df_u = run_query("SELECT p.nombre as Complejo, u.nombre_unidad as Unidad, u.canon_base as 'Tarifa', IF(u.activo,'Activo','Inactivo') as Operatividad, u.estado_vacancia as Vacancia FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id ORDER BY u.id DESC")
                 if not df_u.empty:
                     df_u['Tarifa'] = df_u['Tarifa'].apply(fmt_cop)
-                    st.dataframe(df_u.style.map(get_color_estado, subset=['Operatividad', 'Vacancia']), use_container_width=True, hide_index=True)
+                    st.dataframe(estilizar_df(df_u), use_container_width=True, hide_index=True)
                     
     with t3:
         colA, colB = st.columns(2)
@@ -403,7 +415,7 @@ elif mod == "contratos":
                         st.toast("Cliente en red."); time.sleep(1); st.rerun()
         with c2:
             df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM ap_inquilinos")
-            if not df_i.empty: st.dataframe(df_i, use_container_width=True, hide_index=True)
+            if not df_i.empty: st.dataframe(estilizar_df(df_i), use_container_width=True, hide_index=True)
 
     with t2:
         df_i = run_query("SELECT id, nombre_completo, documento_identidad FROM ap_inquilinos")
@@ -496,7 +508,7 @@ elif mod == "tesoreria":
                 df_hist = run_query("SELECT p.fecha_registro as Timestamp, IFNULL(u.nombre_unidad, 'Borrado') as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id ORDER BY p.id DESC LIMIT 15")
                 if not df_hist.empty:
                     df_hist['Volumen'] = df_hist['Volumen'].apply(fmt_cop)
-                    st.dataframe(df_hist, use_container_width=True, hide_index=True)
+                    st.dataframe(estilizar_df(df_hist), use_container_width=True, hide_index=True)
 
     with t2:
         df_pagos_del = run_query("SELECT p.id, p.fecha_registro, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id ORDER BY p.id DESC LIMIT 50")
@@ -529,7 +541,7 @@ elif mod == "seguridad":
                         st.toast("Usuario guardado."); time.sleep(1); st.rerun()
         with c2:
             df_u = run_query("SELECT username as Alias, nombre_completo as Nombre, rol as Privilegios, IF(activo, 'Activo', 'Inactivo') as Estado FROM ap_usuarios")
-            if not df_u.empty: st.dataframe(df_u.style.map(get_color_estado, subset=['Estado']), use_container_width=True, hide_index=True)
+            if not df_u.empty: st.dataframe(estilizar_df(df_u), use_container_width=True, hide_index=True)
             
     with t2:
         st.markdown("#### Generador Masivo de Infraestructura y Clientes")
@@ -573,3 +585,7 @@ elif mod == "seguridad":
                 st.success("✅ Estructuras indexadas. Dirígete al módulo 'Panel General' para validar el cobrador de mora.")
                 time.sleep(1.5)
                 st.rerun()
+
+# Para salir del programa limpiamente si se pulsa el botón en el top navbar
+if st.session_state.get('logeado') == False:
+    st.stop()
