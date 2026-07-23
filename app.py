@@ -288,15 +288,10 @@ if mod == "portal_inquilino":
                         st.markdown("<br>", unsafe_allow_html=True)
                         
                         if st.form_submit_button("Enviar Reporte para Aprobación"):
-                            # VALIDACIONES ESTRICTAS
-                            if not ref.strip():
-                                st.error("❌ La referencia o medio de pago es obligatoria.")
-                            elif monto <= 0:
-                                st.error("❌ El monto transferido debe ser mayor a cero.")
-                            elif archivo_comprobante is None:
-                                st.error("❌ Es obligatorio adjuntar el soporte de pago.")
-                            elif archivo_comprobante.size > (5 * 1024 * 1024):
-                                st.error("❌ El archivo es demasiado pesado. El máximo permitido es 5MB.")
+                            if not ref.strip(): st.error("❌ La referencia o medio de pago es obligatoria.")
+                            elif monto <= 0: st.error("❌ El monto transferido debe ser mayor a cero.")
+                            elif archivo_comprobante is None: st.error("❌ Es obligatorio adjuntar el soporte de pago.")
+                            elif archivo_comprobante.size > (5 * 1024 * 1024): st.error("❌ El archivo es demasiado pesado. El máximo permitido es 5MB.")
                             else:
                                 path_archivo = guardar_archivo(archivo_comprobante)
                                 f_real_str = fecha_real.strftime('%Y-%m-%d')
@@ -455,6 +450,7 @@ elif mod == "contratos":
     t1, t2, t3 = st.tabs(["👤 Crear Inquilino", "📄 Nuevo Contrato", "🛑 Terminación"])
     
     with t1:
+        st.write("⚠️ *Al crear un inquilino, el sistema le genera automáticamente una cuenta de acceso al portal de pagos usando su Cédula/NIT como usuario y contraseña.*")
         c1, c2 = st.columns([1, 2], gap="large")
         with c1:
             with st.container(border=True):
@@ -536,7 +532,7 @@ elif mod == "contratos":
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------------------------
-# TESORERÍA (CON PARCHE PARA PDF)
+# TESORERÍA (CON PARCHE ANTI-ERRORES DE ARCHIVO)
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería y Conciliación 💰</h2>", unsafe_allow_html=True)
@@ -554,14 +550,17 @@ elif mod == "tesoreria":
                         st.markdown(f"**Cliente:** {pend['nombre_completo']} | **Inmueble:** {pend['nombre_unidad']}")
                         st.write(f"Reporta haber pagado **{fmt_cop(pend['monto_pagado'])}** del periodo **{pend['periodo_pagado']}** (Ref: **{pend['id_referencia_banco']}**).")
                         
-                        # PARCHE: Verificar si es PDF u otra cosa
+                        # PARCHE: Verificar que sí es un texto válido antes de intentar buscarlo en disco
                         ruta_archivo = pend['url_comprobante']
-                        if ruta_archivo and os.path.exists(ruta_archivo):
+                        if isinstance(ruta_archivo, str) and os.path.exists(ruta_archivo):
                             if ruta_archivo.lower().endswith('.pdf'):
                                 with open(ruta_archivo, "rb") as pdf_file:
                                     st.download_button(label="📄 Descargar PDF Soporte", data=pdf_file, file_name=f"soporte_{pend['id']}.pdf", mime="application/pdf", key=f"dl_{pend['id']}")
                             else:
                                 st.image(ruta_archivo, width=250, caption="Comprobante Adjunto")
+                        else:
+                            st.info("Sin comprobante adjunto")
+                            
                     with c_b:
                         st.write(f"Fecha Reportada: {pend['fecha_pago_real']}")
                     with c_c:
