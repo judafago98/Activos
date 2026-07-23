@@ -114,7 +114,7 @@ def guardar_archivo(uploaded_file):
     return file_path
 
 # ==========================================
-# 4. BASE DE DATOS Y AUTO-HEALING (ESQUEMA ACTUALIZADO)
+# 4. BASE DE DATOS Y AUTO-HEALING
 # ==========================================
 @st.cache_resource
 def get_pool():
@@ -153,7 +153,7 @@ def run_transact(query, params=None):
 
 @st.cache_resource
 def inicializar_bd():
-    # AUTO-LIMPIEZA DE DESARROLLO: Si las tablas existen pero no tienen el nuevo esquema, se borran automáticamente.
+    # AUTO-LIMPIEZA DE DESARROLLO
     df_check = run_query("SHOW TABLES LIKE 'ap_contratos'")
     if not df_check.empty:
         df_cols = run_query("SHOW COLUMNS FROM ap_contratos LIKE 'url_contrato'")
@@ -188,7 +188,7 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
     return periodos
 
 # ==========================================
-# 5. LOGIN Y ENRUTADOR SUPREMO
+# 5. LOGIN Y ENRUTADOR SUPREMO (CON PARCHE DE TIPADO)
 # ==========================================
 if 'logeado' not in st.session_state: st.session_state.update({'logeado': False, 'rol': None, 'nombre_usuario': None, 'inquilino_id': None})
 
@@ -206,7 +206,16 @@ if not st.session_state['logeado']:
             if st.button("Ingresar al Sistema", type="secondary"):
                 df_u = run_query("SELECT nombre_completo, rol, inquilino_id FROM ap_usuarios WHERE username=%s AND password=%s AND activo=TRUE", (u, p))
                 if not df_u.empty:
-                    st.session_state.update({'logeado': True, 'nombre_usuario': df_u.iloc[0]['nombre_completo'], 'rol': df_u.iloc[0]['rol'], 'inquilino_id': df_u.iloc[0]['inquilino_id']})
+                    # ¡PARCHE DE SEGURIDAD PARA EL ID DE INQUILINO! Fuerza el número a ser un entero puro de Python.
+                    inq_raw = df_u.iloc[0]['inquilino_id']
+                    inq_val = int(inq_raw) if pd.notna(inq_raw) else None
+                    
+                    st.session_state.update({
+                        'logeado': True, 
+                        'nombre_usuario': df_u.iloc[0]['nombre_completo'], 
+                        'rol': df_u.iloc[0]['rol'], 
+                        'inquilino_id': inq_val
+                    })
                     st.rerun()
                 else: st.error("Acceso denegado. Verifique credenciales.")
     st.stop()
@@ -242,7 +251,8 @@ if mod == "portal_inquilino":
     st.markdown("<h3>Tu Portal de Autogestión 📱</h3>", unsafe_allow_html=True)
     st.write("Bienvenido. Aquí puedes reportar tus pagos y subir tus comprobantes bancarios.")
     
-    inq_id = st.session_state['inquilino_id']
+    # Aseguramos que el ID sea int nativo para evitar cuelgues silenciosos de base de datos
+    inq_id = int(st.session_state['inquilino_id'])
     df_mis_contratos = run_query("SELECT c.id, c.canon_pactado, u.nombre_unidad, p.nombre as prop, c.fecha_inicio, c.fecha_fin FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE c.inquilino_id = %s AND c.estado_contrato = 'Vigente'", (inq_id,))
     
     if df_mis_contratos.empty:
@@ -440,7 +450,7 @@ elif mod == "activos":
                     else: st.info("Edificio sin apartamentos.")
 
 # ----------------------------------------
-# CONTRATOS
+# CONTRATOS (CON SEGURO DE DOBLE VALIDACIÓN)
 # ----------------------------------------
 elif mod == "contratos":
     st.markdown("<h2>Originación y Cierre Contractual 👥</h2>", unsafe_allow_html=True)
@@ -457,10 +467,11 @@ elif mod == "contratos":
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("Almacenar Cliente y Crear Acceso", type="secondary") and ced and nom:
                     if run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (str(ced), str(nom), str(tel))):
-                        # AUTOMATIZACIÓN DE USUARIO DEL PORTAL
                         inq_id_creado = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                         run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol, inquilino_id) VALUES (%s, %s, %s, 'Inquilino', %s)", (str(ced), str(ced), str(nom), int(inq_id_creado)))
-                        st.toast("Cliente y credenciales creadas."); time.sleep(1.5); st.rerun()
+                        st.success("✅ ¡Cliente y credenciales creadas con éxito!")
+                        time.sleep(2)
+                        st.rerun()
         with c2:
             df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM ap_inquilinos")
             if not df_i.empty: st.dataframe(estilizar_df(df_i), use_container_width=True, hide_index=True)
@@ -472,7 +483,7 @@ elif mod == "contratos":
         if df_i.empty or df_p_activas.empty: st.warning("Faltan clientes o edificios activos.")
         else:
             ca, cb = st.columns(2)
-            opc_i = {f"{r['documento_identidad']} - {r['nombre_completo']}": r['id'] for _, r in df_i.iterrows()}
+            opc_i = {f"{r['documento_identidad']} - {r['nombre_completo']}": int(r['id']) for _, r in df_i.iterrows()}
             
             with ca:
                 with st.container(border=True):
@@ -482,7 +493,7 @@ elif mod == "contratos":
                     
                     df_u_libres = run_query("SELECT id, nombre_unidad FROM ap_unidades WHERE propiedad_id = %s AND estado_vacancia = 'Disponible' AND activo = TRUE", (int(id_p_con),))
                     if not df_u_libres.empty:
-                        opc_u = {r['nombre_unidad']: r['id'] for _, r in df_u_libres.iterrows()}
+                        opc_u = {r['nombre_unidad']: int(r['id']) for _, r in df_u_libres.iterrows()}
                         sel_u = st.selectbox("2. Apartamento Objetivo", list(opc_u.keys()))
                     else:
                         st.warning("No hay apartamentos libres en este edificio.")
@@ -504,26 +515,38 @@ elif mod == "contratos":
                             str_fi = fi.strftime('%Y-%m-%d')
                             str_ff = ff.strftime('%Y-%m-%d')
                             
-                            if run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin, url_contrato) VALUES (%s, %s, %s, %s, %s, %s, %s)", (int(opc_u[sel_u]), int(opc_i[sel_i]), float(can), int(dia), str_fi, str_ff, path_pdf)):
-                                run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (int(opc_u[sel_u]),))
-                                st.toast("Contrato subido y blindado."); time.sleep(1.5); st.rerun()
+                            if run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin, url_contrato) VALUES (%s, %s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], float(can), int(dia), str_fi, str_ff, path_pdf)):
+                                run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (opc_u[sel_u],))
+                                st.balloons()
+                                st.success("✅ ¡CONTRATO FORMALIZADO Y APARTAMENTO OCUPADO!")
+                                time.sleep(2.5) # Pausa para evitar doble click
+                                st.rerun()
                         else: st.error("Verifica el apartamento y el monto.")
                         
     with t3:
         df_activos = run_query("SELECT c.id, c.unidad_id, u.nombre_unidad, p.nombre as prop, i.nombre_completo FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id=u.id JOIN ap_propiedades p ON u.propiedad_id=p.id JOIN ap_inquilinos i ON c.inquilino_id=i.id WHERE c.estado_contrato = 'Vigente'")
-        if df_activos.empty: st.info("No hay contratos vigentes.")
+        if df_activos.empty: st.info("No hay contratos vigentes para terminar.")
         else:
-            st.markdown("<div style='background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1px solid #E2E8F0; width: 50%;'>", unsafe_allow_html=True)
-            opc_kill = {f"[{r['prop']} - {r['nombre_unidad']}] | {r['nombre_completo']}": (r['id'], r['unidad_id']) for _, r in df_activos.iterrows()}
+            st.markdown("<div style='background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1px solid #E2E8F0; width: 60%;'>", unsafe_allow_html=True)
+            opc_kill = {f"[{r['prop']} - {r['nombre_unidad']}] | {r['nombre_completo']}": (int(r['id']), int(r['unidad_id'])) for _, r in df_activos.iterrows()}
             sel_kill = st.selectbox("Seleccionar contrato a terminar:", list(opc_kill.keys()))
             f_real = st.date_input("Fecha real de entrega del inmueble:")
+            
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🛑 Ejecutar Terminación Definitiva", type="primary"):
-                id_con, id_uni = opc_kill[sel_kill]
-                str_f_real = f_real.strftime('%Y-%m-%d')
-                if run_transact("UPDATE ap_contratos SET estado_contrato = 'Finalizado', fecha_fin = %s WHERE id = %s", (str_f_real, int(id_con))):
-                    run_transact("UPDATE ap_unidades SET estado_vacancia = 'Disponible' WHERE id = %s", (int(id_uni),))
-                    st.toast("Contrato cerrado."); time.sleep(1.5); st.rerun()
+            st.warning("⚠️ **¡ATENCIÓN!** Al finalizar este contrato, el apartamento volverá a quedar 'Disponible' inmediatamente.")
+            
+            # SEGURO DE DOBLE VALIDACIÓN
+            seguro = st.checkbox("Entiendo la advertencia, deseo finalizar este contrato.")
+            
+            if seguro:
+                if st.button("🛑 Ejecutar Terminación Definitiva", type="primary"):
+                    id_con, id_uni = opc_kill[sel_kill]
+                    str_f_real = f_real.strftime('%Y-%m-%d')
+                    if run_transact("UPDATE ap_contratos SET estado_contrato = 'Finalizado', fecha_fin = %s WHERE id = %s", (str_f_real, id_con)):
+                        run_transact("UPDATE ap_unidades SET estado_vacancia = 'Disponible' WHERE id = %s", (id_uni,))
+                        st.success("✅ ¡El contrato ha sido cerrado y el apartamento vuelve a estar libre!")
+                        time.sleep(2.5)
+                        st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------------------------
@@ -605,11 +628,11 @@ elif mod == "tesoreria":
             df_pagos_del = run_query("SELECT p.id, p.fecha_pago_real, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE p.estado_pago = 'Aprobado' ORDER BY p.id DESC LIMIT 50")
             if not df_pagos_del.empty:
                 st.markdown("<div style='background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1px solid #E2E8F0; width: 60%;'>", unsafe_allow_html=True)
-                opc_p = {f"[{str(r['fecha_pago_real'])}] {r['nombre_unidad']} - {r['nombre_completo']} | {r['periodo_pagado']} | {fmt_cop(r['monto_pagado'])}": r['id'] for _, r in df_pagos_del.iterrows()}
+                opc_p = {f"[{str(r['fecha_pago_real'])}] {r['nombre_unidad']} - {r['nombre_completo']} | {r['periodo_pagado']} | {fmt_cop(r['monto_pagado'])}": int(r['id']) for _, r in df_pagos_del.iterrows()}
                 sel_p = st.selectbox("Seleccionar Pago Aprobado a Revertir", list(opc_p.keys()))
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("🗑️ Eliminar Definitivamente", type="primary"):
-                    if run_transact("DELETE FROM ap_pagos WHERE id = %s", (int(opc_p[sel_p]),)):
+                    if run_transact("DELETE FROM ap_pagos WHERE id = %s", (opc_p[sel_p],)):
                         st.toast("Pago eliminado."); time.sleep(1); st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
             else: st.info("No hay pagos registrados.")
@@ -644,16 +667,16 @@ elif mod == "seguridad":
             with st.spinner("Minando... esto tomará unos segundos"):
                 for i in range(1, 6):
                     run_transact("INSERT INTO ap_propiedades (nombre, direccion) VALUES (%s, %s)", (f"Torre Omega {i}", f"Distrito {i}"))
-                    pid = run_query("SELECT id FROM ap_propiedades ORDER BY id DESC LIMIT 1").iloc[0]['id']
+                    pid = int(run_query("SELECT id FROM ap_propiedades ORDER BY id DESC LIMIT 1").iloc[0]['id'])
                     for j in range(1, 5):
-                        run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (int(pid), f"Apto {j}01", float(700000 + (j*100000))))
+                        run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (pid, f"Apto {j}01", float(700000 + (j*100000))))
                 
                 nombres = ["Bruce Wayne", "Tony Stark", "Lex Luthor", "Oliver Queen", "Norman Osborn"]
                 for i, nom in enumerate(nombres):
                     doc = f"9004{i}"
                     run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (doc, nom, f"+57 300 440{i}"))
-                    inq_id = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 1").iloc[0]['id']
-                    run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol, inquilino_id) VALUES (%s, %s, %s, 'Inquilino', %s)", (doc, doc, nom, int(inq_id)))
+                    inq_id = int(run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 1").iloc[0]['id'])
+                    run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol, inquilino_id) VALUES (%s, %s, %s, 'Inquilino', %s)", (doc, doc, nom, inq_id))
                 
                 clientes_id = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 5")['id'].tolist()
                 unidades_id = run_query("SELECT id, canon_base FROM ap_unidades WHERE estado_vacancia='Disponible' LIMIT 5")
@@ -669,11 +692,11 @@ elif mod == "seguridad":
                     run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s, %s)", (uid, cid, canon, 5, f_ini, f_fin))
                     run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (uid,))
                     
-                    con_id = run_query("SELECT id FROM ap_contratos ORDER BY id DESC LIMIT 1").iloc[0]['id']
+                    con_id = int(run_query("SELECT id FROM ap_contratos ORDER BY id DESC LIMIT 1").iloc[0]['id'])
                     for m_atras in [5, 4, 3]:
                         per_pago = (hoy - relativedelta(months=m_atras)).strftime('%Y-%m')
                         f_real = (hoy - relativedelta(months=m_atras)).replace(day=5).strftime('%Y-%m-%d')
-                        run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, estado_pago) VALUES (%s, %s, %s, %s, %s, 'Aprobado')", (int(con_id), per_pago, canon, "DATA-SEMILLA", f_real))
+                        run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, estado_pago) VALUES (%s, %s, %s, %s, %s, 'Aprobado')", (con_id, per_pago, canon, "DATA-SEMILLA", f_real))
                 
                 st.success("✅ Estructuras indexadas. ¡Prueba entrar con el usuario '90040' y contraseña '90040' para ver el portal del inquilino!")
                 time.sleep(3)
