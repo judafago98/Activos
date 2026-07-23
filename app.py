@@ -153,7 +153,6 @@ def run_transact(query, params=None):
 
 @st.cache_resource
 def inicializar_bd():
-    # AUTO-LIMPIEZA DE DESARROLLO
     df_check = run_query("SHOW TABLES LIKE 'ap_contratos'")
     if not df_check.empty:
         df_cols = run_query("SHOW COLUMNS FROM ap_contratos LIKE 'url_contrato'")
@@ -188,7 +187,7 @@ def generar_periodos_contrato(fecha_ini, fecha_fin):
     return periodos
 
 # ==========================================
-# 5. LOGIN Y ENRUTADOR SUPREMO (CON PARCHE DE TIPADO)
+# 5. LOGIN Y ENRUTADOR SUPREMO
 # ==========================================
 if 'logeado' not in st.session_state: st.session_state.update({'logeado': False, 'rol': None, 'nombre_usuario': None, 'inquilino_id': None})
 
@@ -206,7 +205,6 @@ if not st.session_state['logeado']:
             if st.button("Ingresar al Sistema", type="secondary"):
                 df_u = run_query("SELECT nombre_completo, rol, inquilino_id FROM ap_usuarios WHERE username=%s AND password=%s AND activo=TRUE", (u, p))
                 if not df_u.empty:
-                    # ¡PARCHE DE SEGURIDAD PARA EL ID DE INQUILINO! Fuerza el número a ser un entero puro de Python.
                     inq_raw = df_u.iloc[0]['inquilino_id']
                     inq_val = int(inq_raw) if pd.notna(inq_raw) else None
                     
@@ -222,12 +220,14 @@ if not st.session_state['logeado']:
 
 render_logo()
 
-# LÓGICA DE MULTI-TENANT: Si es inquilino, solo ve su portal
+# LÓGICA DE MULTI-TENANT: Permisos de navegación
 if st.session_state['rol'] == 'Inquilino':
     menu_dict = {"📱 Mi Portal de Pagos": "portal_inquilino"}
 else:
     menu_dict = {"📊 Panel General": "dash", "🏢 Inmuebles": "activos", "👥 Contratos": "contratos", "💰 Tesorería (Conciliación)": "tesoreria"}
-    if st.session_state['rol'] == 'Administrador': menu_dict["⚙️ Seguridad y Sistema"] = "seguridad"
+    if st.session_state['rol'] == 'Administrador': 
+        menu_dict["📁 Archivos"] = "archivos"
+        menu_dict["⚙️ Seguridad y Sistema"] = "seguridad"
 
 opciones_menu = list(menu_dict.keys())
 nav_seleccionada = st.radio("Navegación", opciones_menu, horizontal=True, label_visibility="collapsed")
@@ -251,7 +251,6 @@ if mod == "portal_inquilino":
     st.markdown("<h3>Tu Portal de Autogestión 📱</h3>", unsafe_allow_html=True)
     st.write("Bienvenido. Aquí puedes reportar tus pagos y subir tus comprobantes bancarios.")
     
-    # Aseguramos que el ID sea int nativo para evitar cuelgues silenciosos de base de datos
     inq_id = int(st.session_state['inquilino_id'])
     df_mis_contratos = run_query("SELECT c.id, c.canon_pactado, u.nombre_unidad, p.nombre as prop, c.fecha_inicio, c.fecha_fin FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE c.inquilino_id = %s AND c.estado_contrato = 'Vigente'", (inq_id,))
     
@@ -263,7 +262,6 @@ if mod == "portal_inquilino":
                 st.markdown(f"<h4 style='color:#2563EB;'>🏠 {contrato['prop']} - {contrato['nombre_unidad']}</h4>", unsafe_allow_html=True)
                 st.write(f"**Canon Mensual Base:** {fmt_cop(contrato['canon_pactado'])}")
                 
-                # Calcular periodos pendientes
                 canon_base = float(contrato['canon_pactado'])
                 df_pagos = run_query("SELECT periodo_pagado, SUM(monto_pagado) as total_pagado FROM ap_pagos WHERE contrato_id = %s AND estado_pago != 'Rechazado' GROUP BY periodo_pagado", (int(contrato['id']),))
                 pagos_map = {r['periodo_pagado']: float(r['total_pagado']) for _, r in df_pagos.iterrows()} if not df_pagos.empty else {}
@@ -286,24 +284,31 @@ if mod == "portal_inquilino":
                             fecha_real = st.date_input("Fecha en la que hiciste la transferencia")
                             ref = st.text_input("Referencia o Medio de Pago (Nequi, Bancolombia, etc.)")
                         
-                        archivo_comprobante = st.file_uploader("Adjuntar foto o PDF del comprobante", type=["png", "jpg", "jpeg", "pdf"])
+                        archivo_comprobante = st.file_uploader("Subir soporte de pago (Obligatorio, máx 5MB)", type=["png", "jpg", "jpeg", "pdf"])
                         st.markdown("<br>", unsafe_allow_html=True)
+                        
                         if st.form_submit_button("Enviar Reporte para Aprobación"):
-                            if monto > 0:
-                                path_archivo = guardar_archivo(archivo_comprobante) if archivo_comprobante else None
+                            # VALIDACIONES ESTRICTAS
+                            if not ref.strip():
+                                st.error("❌ La referencia o medio de pago es obligatoria.")
+                            elif monto <= 0:
+                                st.error("❌ El monto transferido debe ser mayor a cero.")
+                            elif archivo_comprobante is None:
+                                st.error("❌ Es obligatorio adjuntar el soporte de pago.")
+                            elif archivo_comprobante.size > (5 * 1024 * 1024):
+                                st.error("❌ El archivo es demasiado pesado. El máximo permitido es 5MB.")
+                            else:
+                                path_archivo = guardar_archivo(archivo_comprobante)
                                 f_real_str = fecha_real.strftime('%Y-%m-%d')
-                                # INGRESA COMO PENDIENTE DE APROBACIÓN
+                                
                                 if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, url_comprobante, estado_pago) VALUES (%s, %s, %s, %s, %s, %s, 'Pendiente')", (int(contrato['id']), str(per_sel), float(monto), str(ref), f_real_str, path_archivo)):
                                     st.toast("Comprobante enviado. En revisión."); time.sleep(1.5); st.rerun()
-                            else: st.error("El monto debe ser mayor a cero.")
 
 # ----------------------------------------
 # PANEL GENERAL (DASHBOARD)
 # ----------------------------------------
 elif mod == "dash":
     st.markdown("<h3>Mando Gerencial 📊</h3>", unsafe_allow_html=True)
-    
-    # 1. KPIs Básicos (Solo pagos aprobados)
     t_con = run_query("SELECT COUNT(*) as t FROM ap_contratos WHERE estado_contrato = 'Vigente'")
     t_ing = run_query("SELECT SUM(monto_pagado) as t FROM ap_pagos WHERE estado_pago = 'Aprobado'")
     df_libres = run_query("SELECT COUNT(*) as t FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id WHERE u.estado_vacancia = 'Disponible' AND u.activo = TRUE AND p.activo = TRUE")
@@ -326,7 +331,6 @@ elif mod == "dash":
 
     with t2:
         st.markdown("#### Distribución de Ingresos por Día del Mes")
-        st.write("Muestra qué días esperas los mayores ingresos según las condiciones de los contratos vigentes.")
         df_flujo = run_query("SELECT dia_pago_mensual as Día, SUM(canon_pactado) as 'Monto Proyectado', COUNT(*) as 'Contratos' FROM ap_contratos WHERE estado_contrato = 'Vigente' GROUP BY dia_pago_mensual ORDER BY dia_pago_mensual ASC")
         if not df_flujo.empty:
             df_flujo['Monto Proyectado (Texto)'] = df_flujo['Monto Proyectado'].apply(fmt_cop)
@@ -361,13 +365,7 @@ elif mod == "dash":
                         if pagado < canon:
                             deuda_restante = canon - pagado
                             dias_atraso = "Mes anterior" if p < mes_actual_str else f"{hoy.day - int(c['dia_pago_mensual'])} días"
-                            mora_list.append({
-                                "Cliente": c['nombre_completo'],
-                                "Inmueble": f"{c['prop']} - {c['nombre_unidad']}",
-                                "Periodo": p,
-                                "Atraso": dias_atraso,
-                                "Deuda Real": deuda_restante
-                            })
+                            mora_list.append({"Cliente": c['nombre_completo'], "Inmueble": f"{c['prop']} - {c['nombre_unidad']}", "Periodo": p, "Atraso": dias_atraso, "Deuda Real": deuda_restante})
 
         if mora_list:
             df_mora = pd.DataFrame(mora_list)
@@ -450,14 +448,13 @@ elif mod == "activos":
                     else: st.info("Edificio sin apartamentos.")
 
 # ----------------------------------------
-# CONTRATOS (CON SEGURO DE DOBLE VALIDACIÓN)
+# CONTRATOS
 # ----------------------------------------
 elif mod == "contratos":
     st.markdown("<h2>Originación y Cierre Contractual 👥</h2>", unsafe_allow_html=True)
     t1, t2, t3 = st.tabs(["👤 Crear Inquilino", "📄 Nuevo Contrato", "🛑 Terminación"])
     
     with t1:
-        st.write("⚠️ *Al crear un inquilino, el sistema le genera automáticamente una cuenta de acceso al portal de pagos usando su Cédula/NIT como usuario y contraseña.*")
         c1, c2 = st.columns([1, 2], gap="large")
         with c1:
             with st.container(border=True):
@@ -469,9 +466,7 @@ elif mod == "contratos":
                     if run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (str(ced), str(nom), str(tel))):
                         inq_id_creado = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                         run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol, inquilino_id) VALUES (%s, %s, %s, 'Inquilino', %s)", (str(ced), str(ced), str(nom), int(inq_id_creado)))
-                        st.success("✅ ¡Cliente y credenciales creadas con éxito!")
-                        time.sleep(2)
-                        st.rerun()
+                        st.success("✅ ¡Cliente y credenciales creadas con éxito!"); time.sleep(2); st.rerun()
         with c2:
             df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM ap_inquilinos")
             if not df_i.empty: st.dataframe(estilizar_df(df_i), use_container_width=True, hide_index=True)
@@ -517,10 +512,7 @@ elif mod == "contratos":
                             
                             if run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin, url_contrato) VALUES (%s, %s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], float(can), int(dia), str_fi, str_ff, path_pdf)):
                                 run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (opc_u[sel_u],))
-                                st.balloons()
-                                st.success("✅ ¡CONTRATO FORMALIZADO Y APARTAMENTO OCUPADO!")
-                                time.sleep(2.5) # Pausa para evitar doble click
-                                st.rerun()
+                                st.balloons(); st.success("✅ ¡CONTRATO FORMALIZADO!"); time.sleep(2.5); st.rerun()
                         else: st.error("Verifica el apartamento y el monto.")
                         
     with t3:
@@ -533,31 +525,24 @@ elif mod == "contratos":
             f_real = st.date_input("Fecha real de entrega del inmueble:")
             
             st.markdown("<br>", unsafe_allow_html=True)
-            st.warning("⚠️ **¡ATENCIÓN!** Al finalizar este contrato, el apartamento volverá a quedar 'Disponible' inmediatamente.")
-            
-            # SEGURO DE DOBLE VALIDACIÓN
             seguro = st.checkbox("Entiendo la advertencia, deseo finalizar este contrato.")
-            
             if seguro:
                 if st.button("🛑 Ejecutar Terminación Definitiva", type="primary"):
                     id_con, id_uni = opc_kill[sel_kill]
                     str_f_real = f_real.strftime('%Y-%m-%d')
                     if run_transact("UPDATE ap_contratos SET estado_contrato = 'Finalizado', fecha_fin = %s WHERE id = %s", (str_f_real, id_con)):
                         run_transact("UPDATE ap_unidades SET estado_vacancia = 'Disponible' WHERE id = %s", (id_uni,))
-                        st.success("✅ ¡El contrato ha sido cerrado y el apartamento vuelve a estar libre!")
-                        time.sleep(2.5)
-                        st.rerun()
+                        st.success("✅ ¡Contrato cerrado!"); time.sleep(2.5); st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------------------------
-# TESORERÍA (CONCILIACIÓN Y PAGOS DIRECTOS)
+# TESORERÍA (CON PARCHE PARA PDF)
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería y Conciliación 💰</h2>", unsafe_allow_html=True)
     t1, t2, t3 = st.tabs(["✅ Bandeja de Aprobaciones (Inquilinos)", "📥 Registrar Ingreso (Caja Fuerte)", "🗑️ Anular Pagos"])
     
     with t1:
-        st.markdown("#### Pagos reportados por clientes esperando tu validación")
         df_pendientes = run_query("SELECT p.id, p.fecha_registro, p.fecha_pago_real, u.nombre_unidad, i.nombre_completo, p.periodo_pagado, p.id_referencia_banco, p.monto_pagado, p.url_comprobante FROM ap_pagos p JOIN ap_contratos c ON p.contrato_id = c.id JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE p.estado_pago = 'Pendiente'")
         
         if df_pendientes.empty: st.success("No hay pagos pendientes de aprobación. Todo al día.")
@@ -567,9 +552,16 @@ elif mod == "tesoreria":
                     c_a, c_b, c_c = st.columns([2, 1, 1])
                     with c_a:
                         st.markdown(f"**Cliente:** {pend['nombre_completo']} | **Inmueble:** {pend['nombre_unidad']}")
-                        st.write(f"Reporta haber pagado **{fmt_cop(pend['monto_pagado'])}** correspondientes al periodo **{pend['periodo_pagado']}** mediante **{pend['id_referencia_banco']}**.")
-                        if pend['url_comprobante'] and os.path.exists(pend['url_comprobante']):
-                            st.image(pend['url_comprobante'], width=200, caption="Comprobante Adjunto")
+                        st.write(f"Reporta haber pagado **{fmt_cop(pend['monto_pagado'])}** del periodo **{pend['periodo_pagado']}** (Ref: **{pend['id_referencia_banco']}**).")
+                        
+                        # PARCHE: Verificar si es PDF u otra cosa
+                        ruta_archivo = pend['url_comprobante']
+                        if ruta_archivo and os.path.exists(ruta_archivo):
+                            if ruta_archivo.lower().endswith('.pdf'):
+                                with open(ruta_archivo, "rb") as pdf_file:
+                                    st.download_button(label="📄 Descargar PDF Soporte", data=pdf_file, file_name=f"soporte_{pend['id']}.pdf", mime="application/pdf", key=f"dl_{pend['id']}")
+                            else:
+                                st.image(ruta_archivo, width=250, caption="Comprobante Adjunto")
                     with c_b:
                         st.write(f"Fecha Reportada: {pend['fecha_pago_real']}")
                     with c_c:
@@ -581,7 +573,6 @@ elif mod == "tesoreria":
                             st.toast("Pago denegado."); time.sleep(1); st.rerun()
     
     with t2:
-        st.markdown("#### Ingreso Manual Directo")
         df_activos = run_query("SELECT c.id, c.fecha_inicio, c.fecha_fin, u.nombre_unidad as uni, p.nombre as prop, i.nombre_completo as inq, c.canon_pactado FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id = u.id JOIN ap_propiedades p ON u.propiedad_id = p.id JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE c.estado_contrato = 'Vigente'")
         if df_activos.empty: st.info("Sin contratos vigentes.")
         else:
@@ -623,7 +614,7 @@ elif mod == "tesoreria":
 
     with t3:
         if st.session_state['rol'] != 'Administrador':
-            st.error("Privilegio insuficiente. Solo el Administrador puede anular transacciones del sistema.")
+            st.error("Privilegio insuficiente para anular transacciones.")
         else:
             df_pagos_del = run_query("SELECT p.id, p.fecha_pago_real, p.monto_pagado, IFNULL(u.nombre_unidad, 'Desconocido') as nombre_unidad, IFNULL(i.nombre_completo, 'Desconocido') as nombre_completo, p.periodo_pagado FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id LEFT JOIN ap_inquilinos i ON c.inquilino_id = i.id WHERE p.estado_pago = 'Aprobado' ORDER BY p.id DESC LIMIT 50")
             if not df_pagos_del.empty:
@@ -636,6 +627,43 @@ elif mod == "tesoreria":
                         st.toast("Pago eliminado."); time.sleep(1); st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
             else: st.info("No hay pagos registrados.")
+
+# ----------------------------------------
+# GESTOR DE ARCHIVOS
+# ----------------------------------------
+elif mod == "archivos":
+    st.markdown("<h2>Gestor de Archivos Físicos 📁</h2>", unsafe_allow_html=True)
+    st.write("Aquí puedes visualizar y eliminar comprobantes y PDFs para liberar espacio del servidor.")
+    
+    archivos = os.listdir(UPLOAD_DIR) if os.path.exists(UPLOAD_DIR) else []
+    
+    if not archivos:
+        st.info("El disco está completamente limpio. No hay archivos alojados en el servidor.")
+    else:
+        datos_archivos = []
+        for arch in archivos:
+            ruta_completa = os.path.join(UPLOAD_DIR, arch)
+            peso_mb = os.path.getsize(ruta_completa) / (1024 * 1024)
+            datos_archivos.append({"Nombre del Archivo": arch, "Peso (MB)": round(peso_mb, 2)})
+            
+        df_arch = pd.DataFrame(datos_archivos)
+        
+        c1, c2 = st.columns([1.5, 1])
+        with c1:
+            st.dataframe(estilizar_df(df_arch), use_container_width=True, hide_index=True)
+        with c2:
+            with st.container(border=True):
+                st.markdown("#### Eliminar Archivos")
+                archivo_a_borrar = st.selectbox("Seleccionar archivo", df_arch["Nombre del Archivo"].tolist())
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🗑️ Eliminar Archivo", type="primary"):
+                    try:
+                        os.remove(os.path.join(UPLOAD_DIR, archivo_a_borrar))
+                        st.toast(f"Archivo {archivo_a_borrar} eliminado.")
+                        time.sleep(1.5)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al eliminar: {e}")
 
 # ----------------------------------------
 # SEGURIDAD IAM & GENERADOR DATA SEMILLA
@@ -662,7 +690,6 @@ elif mod == "seguridad":
             
     with t2:
         st.markdown("#### Generador Masivo (Data Semilla)")
-        st.write("Inyectará 5 Edificios, Inquilinos (con usuarios para el portal), y pagos aprobados y en mora.")
         if st.button("🚀 INYECTAR INFRAESTRUCTURA DE PRUEBA", type="secondary"):
             with st.spinner("Minando... esto tomará unos segundos"):
                 for i in range(1, 6):
@@ -698,6 +725,4 @@ elif mod == "seguridad":
                         f_real = (hoy - relativedelta(months=m_atras)).replace(day=5).strftime('%Y-%m-%d')
                         run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, estado_pago) VALUES (%s, %s, %s, %s, %s, 'Aprobado')", (con_id, per_pago, canon, "DATA-SEMILLA", f_real))
                 
-                st.success("✅ Estructuras indexadas. ¡Prueba entrar con el usuario '90040' y contraseña '90040' para ver el portal del inquilino!")
-                time.sleep(3)
-                st.rerun()
+                st.success("✅ Estructuras indexadas."); time.sleep(3); st.rerun()
