@@ -267,7 +267,6 @@ if mod == "portal_inquilino":
                 
                 periodos_todos = generar_periodos_contrato(contrato['fecha_inicio'], contrato['fecha_fin'])
                 
-                # REGLA DE NEGOCIO: Mostrar solo mora + mes actual + 1 mes anticipado
                 hoy = datetime.date.today()
                 mes_siguiente_str = (hoy + relativedelta(months=1)).strftime("%Y-%m")
                 
@@ -302,11 +301,13 @@ if mod == "portal_inquilino":
                             else:
                                 path_archivo = guardar_archivo(archivo_comprobante) if archivo_comprobante else None
                                 f_real_str = fecha_real.strftime('%Y-%m-%d')
-                                # Concatenar metodo y referencia
                                 ref_final = f"{metodo_pago}" + (f" - {ref_txt}" if ref_txt.strip() else "")
                                 
                                 if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, url_comprobante, estado_pago) VALUES (%s, %s, %s, %s, %s, %s, 'Pendiente')", (int(contrato['id']), str(per_sel), float(monto), str(ref_final), f_real_str, path_archivo)):
-                                    st.toast("Comprobante enviado. En revisión."); time.sleep(1.5); st.rerun()
+                                    st.success("✅ ¡Pago reportado exitosamente! El administrador lo revisará muy pronto.")
+                                    st.balloons()
+                                    time.sleep(3)
+                                    st.rerun()
 
 # ----------------------------------------
 # PANEL GENERAL (DASHBOARD)
@@ -393,7 +394,9 @@ elif mod == "activos":
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("Indexar Edificio", type="secondary") and nom:
                     if run_transact("INSERT INTO ap_propiedades (nombre, direccion) VALUES (%s, %s)", (str(nom), str(dir))):
-                        st.toast("Edificio registrado."); time.sleep(1); st.rerun()
+                        st.success("✅ ¡Edificio registrado con éxito en el inventario!")
+                        time.sleep(2)
+                        st.rerun()
         with c2:
             df_p = run_query("SELECT id as ID, nombre as Complejo, direccion as Dirección, IF(activo,'Activo','Inactivo') as Estado FROM ap_propiedades")
             if not df_p.empty: st.dataframe(estilizar_df(df_p), use_container_width=True, hide_index=True)
@@ -412,7 +415,9 @@ elif mod == "activos":
                     st.markdown("<br>", unsafe_allow_html=True)
                     if st.button("Crear Inmueble", type="secondary") and n_uni:
                         if run_transact("INSERT INTO ap_unidades (propiedad_id, nombre_unidad, canon_base) VALUES (%s, %s, %s)", (int(opc_p[sel_p]), str(n_uni), float(can_b))):
-                            st.toast("Unidad en circulación."); time.sleep(1); st.rerun()
+                            st.success("✅ ¡Apartamento/Unidad creada exitosamente!")
+                            time.sleep(2)
+                            st.rerun()
             with c2:
                 df_u = run_query("SELECT p.nombre as Complejo, u.nombre_unidad as Unidad, u.canon_base as 'Tarifa', IF(u.activo,'Activo','Inactivo') as Operatividad, u.estado_vacancia as Vacancia FROM ap_unidades u JOIN ap_propiedades p ON u.propiedad_id = p.id ORDER BY u.id DESC")
                 if not df_u.empty:
@@ -432,7 +437,7 @@ elif mod == "activos":
                         nom_p = sel_tog_p.split("] ")[1]
                         nuevo_estado = 0 if "Activo" in sel_tog_p else 1
                         run_transact("UPDATE ap_propiedades SET activo = %s WHERE nombre = %s", (nuevo_estado, nom_p))
-                        st.rerun()
+                        st.toast("Estado del edificio actualizado."); time.sleep(1); st.rerun()
         with colB:
             st.markdown("#### Activar/Inactivar Apartamentos")
             if not df_all_p.empty:
@@ -448,7 +453,7 @@ elif mod == "activos":
                             nom_u = sel_tog_u.split("] ")[1]
                             nuevo_estado = 0 if "Activa" in sel_tog_u else 1
                             run_transact("UPDATE ap_unidades SET activo = %s WHERE nombre_unidad = %s AND propiedad_id = %s", (nuevo_estado, nom_u, int(id_prop_filtro)))
-                            st.rerun()
+                            st.toast("Estado del apartamento actualizado."); time.sleep(1); st.rerun()
                     else: st.info("Edificio sin apartamentos.")
 
 # ----------------------------------------
@@ -471,7 +476,10 @@ elif mod == "contratos":
                     if run_transact("INSERT INTO ap_inquilinos (documento_identidad, nombre_completo, telefono) VALUES (%s, %s, %s)", (str(ced), str(nom), str(tel))):
                         inq_id_creado = run_query("SELECT id FROM ap_inquilinos ORDER BY id DESC LIMIT 1").iloc[0]['id']
                         run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol, inquilino_id) VALUES (%s, %s, %s, 'Inquilino', %s)", (str(ced), str(ced), str(nom), int(inq_id_creado)))
-                        st.success("✅ ¡Cliente y credenciales creadas con éxito!"); time.sleep(2); st.rerun()
+                        st.success("✅ ¡Cliente y credenciales de acceso creadas con éxito!")
+                        st.balloons()
+                        time.sleep(2.5)
+                        st.rerun()
         with c2:
             df_i = run_query("SELECT documento_identidad as ID, nombre_completo as Razón, telefono as Contacto FROM ap_inquilinos")
             if not df_i.empty: st.dataframe(estilizar_df(df_i), use_container_width=True, hide_index=True)
@@ -517,7 +525,10 @@ elif mod == "contratos":
                             
                             if run_transact("INSERT INTO ap_contratos (unidad_id, inquilino_id, canon_pactado, dia_pago_mensual, fecha_inicio, fecha_fin, url_contrato) VALUES (%s, %s, %s, %s, %s, %s, %s)", (opc_u[sel_u], opc_i[sel_i], float(can), int(dia), str_fi, str_ff, path_pdf)):
                                 run_transact("UPDATE ap_unidades SET estado_vacancia = 'Ocupado' WHERE id = %s", (opc_u[sel_u],))
-                                st.balloons(); st.success("✅ ¡CONTRATO FORMALIZADO!"); time.sleep(2.5); st.rerun()
+                                st.balloons()
+                                st.success("✅ ¡CONTRATO FORMALIZADO Y APARTAMENTO OCUPADO!")
+                                time.sleep(2.5) 
+                                st.rerun()
                         else: st.error("Verifica el apartamento y el monto.")
                         
     with t3:
@@ -530,6 +541,7 @@ elif mod == "contratos":
             f_real = st.date_input("Fecha real de entrega del inmueble:")
             
             st.markdown("<br>", unsafe_allow_html=True)
+            st.warning("⚠️ **¡ATENCIÓN!** Al finalizar este contrato, el apartamento volverá a quedar 'Disponible' inmediatamente.")
             seguro = st.checkbox("Entiendo la advertencia, deseo finalizar este contrato.")
             if seguro:
                 if st.button("🛑 Ejecutar Terminación Definitiva", type="primary"):
@@ -537,7 +549,9 @@ elif mod == "contratos":
                     str_f_real = f_real.strftime('%Y-%m-%d')
                     if run_transact("UPDATE ap_contratos SET estado_contrato = 'Finalizado', fecha_fin = %s WHERE id = %s", (str_f_real, id_con)):
                         run_transact("UPDATE ap_unidades SET estado_vacancia = 'Disponible' WHERE id = %s", (id_uni,))
-                        st.success("✅ ¡Contrato cerrado!"); time.sleep(2.5); st.rerun()
+                        st.success("✅ ¡El contrato ha sido cerrado y el apartamento vuelve a estar libre!")
+                        time.sleep(2.5)
+                        st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
     with t4:
@@ -556,10 +570,10 @@ elif mod == "contratos":
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⏳ Aplicar Prórroga", type="secondary"):
                 id_con, f_fin_actual = opc_ext[sel_ext]
-                # Sumamos los meses seleccionados a la fecha fin actual
                 nueva_f_fin = f_fin_actual + relativedelta(months=meses_prorroga)
                 
                 if run_transact("UPDATE ap_contratos SET fecha_fin = %s WHERE id = %s", (nueva_f_fin.strftime('%Y-%m-%d'), id_con)):
+                    st.balloons()
                     st.success(f"✅ ¡Contrato extendido exitosamente! Nueva fecha de finalización: {nueva_f_fin.strftime('%Y-%m-%d')}")
                     time.sleep(2.5)
                     st.rerun()
@@ -640,7 +654,10 @@ elif mod == "tesoreria":
                             ref_final_admin = f"{metodo_pago_admin}" + (f" - {ref_txt_admin}" if ref_txt_admin.strip() else "")
                             
                             if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, estado_pago) VALUES (%s, %s, %s, %s, %s, 'Aprobado')", (int(dat_con['id']), str(per_sel), float(monto), str(ref_final_admin), f_real_str)):
-                                st.toast("Pago registrado."); time.sleep(1); st.rerun()
+                                st.success("✅ ¡Pago asentado en la caja fuerte con éxito!")
+                                st.balloons()
+                                time.sleep(2.5)
+                                st.rerun()
 
             with c2:
                 df_hist = run_query("SELECT p.fecha_pago_real as 'Fecha Ingreso', u.nombre_unidad as Origen, p.periodo_pagado as Periodo, p.monto_pagado as Volumen FROM ap_pagos p LEFT JOIN ap_contratos c ON p.contrato_id = c.id LEFT JOIN ap_unidades u ON c.unidad_id = u.id WHERE p.estado_pago = 'Aprobado' ORDER BY p.id DESC LIMIT 15")
@@ -719,7 +736,9 @@ elif mod == "seguridad":
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("Crear Perfil Interno", type="secondary") and nu and np:
                     if run_transact("INSERT INTO ap_usuarios (username, password, nombre_completo, rol) VALUES (%s, %s, %s, %s)", (str(nu), str(np), str(nn), str(nr))):
-                        st.toast("Usuario guardado."); time.sleep(1); st.rerun()
+                        st.success("✅ ¡Usuario/Perfil creado con éxito en el sistema!")
+                        time.sleep(2.5)
+                        st.rerun()
         with c2:
             df_u = run_query("SELECT username as Alias, nombre_completo as Nombre, rol as Privilegios FROM ap_usuarios")
             if not df_u.empty: st.dataframe(estilizar_df(df_u), use_container_width=True, hide_index=True)
