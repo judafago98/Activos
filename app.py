@@ -13,7 +13,6 @@ from dateutil.relativedelta import relativedelta
 # ==========================================
 st.set_page_config(page_title="Gestión de Activos", layout="wide", initial_sidebar_state="collapsed", page_icon="🏢")
 
-# Crear directorio seguro para los PDFs y Fotos de comprobantes
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -245,7 +244,7 @@ st.divider()
 # ==========================================
 
 # ----------------------------------------
-# PORTAL DEL INQUILINO (Vista Aislada)
+# PORTAL DEL INQUILINO
 # ----------------------------------------
 if mod == "portal_inquilino":
     st.markdown("<h3>Tu Portal de Autogestión 📱</h3>", unsafe_allow_html=True)
@@ -267,9 +266,16 @@ if mod == "portal_inquilino":
                 pagos_map = {r['periodo_pagado']: float(r['total_pagado']) for _, r in df_pagos.iterrows()} if not df_pagos.empty else {}
                 
                 periodos_todos = generar_periodos_contrato(contrato['fecha_inicio'], contrato['fecha_fin'])
+                
+                # REGLA DE NEGOCIO: Mostrar solo mora + mes actual + 1 mes anticipado
+                hoy = datetime.date.today()
+                mes_siguiente_str = (hoy + relativedelta(months=1)).strftime("%Y-%m")
+                
                 periodos_pendientes = []
                 for p in periodos_todos:
-                    if (canon_base - pagos_map.get(p, 0.0)) > 0: periodos_pendientes.append(p)
+                    if (canon_base - pagos_map.get(p, 0.0)) > 0:
+                        if p <= mes_siguiente_str:
+                            periodos_pendientes.append(p)
                 
                 if not periodos_pendientes:
                     st.success("¡Felicidades! Estás completamente al día con este inmueble.")
@@ -280,23 +286,26 @@ if mod == "portal_inquilino":
                         with c1:
                             per_sel = st.selectbox("Mes que estás pagando", periodos_pendientes)
                             monto = st.number_input("Valor exacto transferido ($)", min_value=0.0, value=canon_base, step=10000.0)
+                            metodo_pago = st.selectbox("Medio de Pago", ["Nequi", "DaviPlata", "Llave", "Cuenta de Ahorros", "Cuenta Corriente", "Efectivo"])
                         with c2:
-                            fecha_real = st.date_input("Fecha en la que hiciste la transferencia")
-                            ref = st.text_input("Referencia o Medio de Pago (Nequi, Bancolombia, etc.)")
+                            fecha_real = st.date_input("Fecha en la que hiciste el pago")
+                            ref_txt = st.text_input("Número de Aprobación / Referencia (Opcional)")
+                            archivo_comprobante = st.file_uploader("Subir soporte de pago (Obligatorio excepto Efectivo, máx 5MB)", type=["png", "jpg", "jpeg", "pdf"])
                         
-                        archivo_comprobante = st.file_uploader("Subir soporte de pago (Obligatorio, máx 5MB)", type=["png", "jpg", "jpeg", "pdf"])
                         st.markdown("<br>", unsafe_allow_html=True)
-                        
                         if st.form_submit_button("Enviar Reporte para Aprobación"):
-                            if not ref.strip(): st.error("❌ La referencia o medio de pago es obligatoria.")
-                            elif monto <= 0: st.error("❌ El monto transferido debe ser mayor a cero.")
-                            elif archivo_comprobante is None: st.error("❌ Es obligatorio adjuntar el soporte de pago.")
-                            elif archivo_comprobante.size > (5 * 1024 * 1024): st.error("❌ El archivo es demasiado pesado. El máximo permitido es 5MB.")
+                            if monto <= 0: st.error("❌ El monto transferido debe ser mayor a cero.")
+                            elif metodo_pago != "Efectivo" and archivo_comprobante is None: 
+                                st.error(f"❌ Es obligatorio adjuntar el soporte de pago para transacciones por {metodo_pago}.")
+                            elif archivo_comprobante is not None and archivo_comprobante.size > (5 * 1024 * 1024): 
+                                st.error("❌ El archivo es demasiado pesado. El máximo permitido es 5MB.")
                             else:
-                                path_archivo = guardar_archivo(archivo_comprobante)
+                                path_archivo = guardar_archivo(archivo_comprobante) if archivo_comprobante else None
                                 f_real_str = fecha_real.strftime('%Y-%m-%d')
+                                # Concatenar metodo y referencia
+                                ref_final = f"{metodo_pago}" + (f" - {ref_txt}" if ref_txt.strip() else "")
                                 
-                                if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, url_comprobante, estado_pago) VALUES (%s, %s, %s, %s, %s, %s, 'Pendiente')", (int(contrato['id']), str(per_sel), float(monto), str(ref), f_real_str, path_archivo)):
+                                if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, url_comprobante, estado_pago) VALUES (%s, %s, %s, %s, %s, %s, 'Pendiente')", (int(contrato['id']), str(per_sel), float(monto), str(ref_final), f_real_str, path_archivo)):
                                     st.toast("Comprobante enviado. En revisión."); time.sleep(1.5); st.rerun()
 
 # ----------------------------------------
@@ -443,14 +452,14 @@ elif mod == "activos":
                     else: st.info("Edificio sin apartamentos.")
 
 # ----------------------------------------
-# CONTRATOS
+# CONTRATOS Y PRÓRROGAS
 # ----------------------------------------
 elif mod == "contratos":
     st.markdown("<h2>Originación y Cierre Contractual 👥</h2>", unsafe_allow_html=True)
-    t1, t2, t3 = st.tabs(["👤 Crear Inquilino", "📄 Nuevo Contrato", "🛑 Terminación"])
+    t1, t2, t3, t4 = st.tabs(["👤 Crear Inquilino", "📄 Nuevo Contrato", "🛑 Terminación", "⏳ Alargar Contrato"])
     
     with t1:
-        st.write("⚠️ *Al crear un inquilino, el sistema le genera automáticamente una cuenta de acceso al portal de pagos usando su Cédula/NIT como usuario y contraseña.*")
+        st.write("⚠️ *Al crear un inquilino, el sistema le genera automáticamente una cuenta de acceso al portal usando su Cédula/NIT como usuario y contraseña.*")
         c1, c2 = st.columns([1, 2], gap="large")
         with c1:
             with st.container(border=True):
@@ -531,8 +540,33 @@ elif mod == "contratos":
                         st.success("✅ ¡Contrato cerrado!"); time.sleep(2.5); st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
+    with t4:
+        st.markdown("#### Prórroga de Contratos Vigentes")
+        df_activos_prorroga = run_query("SELECT c.id, c.fecha_fin, u.nombre_unidad, p.nombre as prop, i.nombre_completo FROM ap_contratos c JOIN ap_unidades u ON c.unidad_id=u.id JOIN ap_propiedades p ON u.propiedad_id=p.id JOIN ap_inquilinos i ON c.inquilino_id=i.id WHERE c.estado_contrato = 'Vigente'")
+        
+        if df_activos_prorroga.empty: 
+            st.info("No hay contratos vigentes.")
+        else:
+            st.markdown("<div style='background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1px solid #E2E8F0; width: 60%;'>", unsafe_allow_html=True)
+            opc_ext = {f"[{r['prop']} - {r['nombre_unidad']}] | {r['nombre_completo']} | Vence: {r['fecha_fin']}": (int(r['id']), r['fecha_fin']) for _, r in df_activos_prorroga.iterrows()}
+            sel_ext = st.selectbox("Seleccionar contrato a prorrogar:", list(opc_ext.keys()))
+            
+            meses_prorroga = st.number_input("¿Cuántos meses adicionales deseas agregar al contrato?", min_value=1, value=6, step=1)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("⏳ Aplicar Prórroga", type="secondary"):
+                id_con, f_fin_actual = opc_ext[sel_ext]
+                # Sumamos los meses seleccionados a la fecha fin actual
+                nueva_f_fin = f_fin_actual + relativedelta(months=meses_prorroga)
+                
+                if run_transact("UPDATE ap_contratos SET fecha_fin = %s WHERE id = %s", (nueva_f_fin.strftime('%Y-%m-%d'), id_con)):
+                    st.success(f"✅ ¡Contrato extendido exitosamente! Nueva fecha de finalización: {nueva_f_fin.strftime('%Y-%m-%d')}")
+                    time.sleep(2.5)
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
 # ----------------------------------------
-# TESORERÍA (CON PARCHE ANTI-ERRORES DE ARCHIVO)
+# TESORERÍA (CON VALIDACIÓN DE MEDIOS DE PAGO)
 # ----------------------------------------
 elif mod == "tesoreria":
     st.markdown("<h2>Tesorería y Conciliación 💰</h2>", unsafe_allow_html=True)
@@ -550,7 +584,6 @@ elif mod == "tesoreria":
                         st.markdown(f"**Cliente:** {pend['nombre_completo']} | **Inmueble:** {pend['nombre_unidad']}")
                         st.write(f"Reporta haber pagado **{fmt_cop(pend['monto_pagado'])}** del periodo **{pend['periodo_pagado']}** (Ref: **{pend['id_referencia_banco']}**).")
                         
-                        # PARCHE: Verificar que sí es un texto válido antes de intentar buscarlo en disco
                         ruta_archivo = pend['url_comprobante']
                         if isinstance(ruta_archivo, str) and os.path.exists(ruta_archivo):
                             if ruta_archivo.lower().endswith('.pdf'):
@@ -597,12 +630,16 @@ elif mod == "tesoreria":
                         
                         monto = st.number_input("Capital Recibido ($)", min_value=0.0, max_value=saldo_pendiente, value=saldo_pendiente, step=10000.0)
                         f_real = st.date_input("Fecha en la que entró la plata:")
-                        ref = st.text_input("Medio de Pago")
-                        st.markdown("<br>", unsafe_allow_html=True)
                         
+                        metodo_pago_admin = st.selectbox("Medio de Pago", ["Nequi", "DaviPlata", "Llave", "Cuenta de Ahorros", "Cuenta Corriente", "Efectivo"])
+                        ref_txt_admin = st.text_input("Número de Aprobación (Opcional)")
+                        
+                        st.markdown("<br>", unsafe_allow_html=True)
                         if st.button("Asentar Directo en Caja", type="secondary") and monto > 0:
                             f_real_str = f_real.strftime('%Y-%m-%d')
-                            if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, estado_pago) VALUES (%s, %s, %s, %s, %s, 'Aprobado')", (int(dat_con['id']), str(per_sel), float(monto), str(ref), f_real_str)):
+                            ref_final_admin = f"{metodo_pago_admin}" + (f" - {ref_txt_admin}" if ref_txt_admin.strip() else "")
+                            
+                            if run_transact("INSERT INTO ap_pagos (contrato_id, periodo_pagado, monto_pagado, id_referencia_banco, fecha_pago_real, estado_pago) VALUES (%s, %s, %s, %s, %s, 'Aprobado')", (int(dat_con['id']), str(per_sel), float(monto), str(ref_final_admin), f_real_str)):
                                 st.toast("Pago registrado."); time.sleep(1); st.rerun()
 
             with c2:
